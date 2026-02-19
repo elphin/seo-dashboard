@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Audit Dashboard — https://blooom.nl</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .header-left h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header-left p { font-size: 13px; color: #94a3b8; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  /* Layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+  .full-width { margin-bottom: 24px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e2e8f0; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: 16px; }
+
+  /* Score gauge */
+  .score-card { display: flex; flex-direction: column; align-items: center; }
+  .score-gauge { margin-bottom: 8px; }
+  .score-grade { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .score-sub { font-size: 12px; color: #94a3b8; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-item { text-align: center; padding: 12px 8px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #1e293b; }
+  .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* E-E-A-T */
+  .eeat-score { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+  .eeat-list { list-style: none; }
+  .eeat-list li { font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
+  .eeat-list li:last-child { border-bottom: none; }
+  .eeat-signal { color: #22c55e; }
+  .eeat-issue { color: #f59e0b; }
+
+  /* Cluster grid */
+  .clusters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .cluster-card { background: #f8fafc; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0; }
+  .cluster-card.cluster-thin { border-color: #fbbf24; background: #fffbeb; }
+  .cluster-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155; }
+  .cluster-count { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+  .cluster-meta { font-size: 11px; color: #94a3b8; }
+  .cluster-warning { font-size: 11px; color: #b45309; margin-top: 6px; }
+  .uncategorized-note { font-size: 13px; color: #64748b; margin-top: 12px; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+
+  /* Cannibalization */
+  .cannibal-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .cannibal-keyword { font-size: 14px; font-weight: 600; color: #c2410c; margin-bottom: 10px; }
+  .cannibal-pages { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .cannibal-page { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 6px 10px; background: white; border-radius: 6px; }
+  .cannibal-title { flex: 1; font-weight: 500; }
+  .cannibal-words, .cannibal-links { color: #64748b; font-size: 12px; white-space: nowrap; }
+  .cannibal-tip { font-size: 12px; color: #78716c; font-style: italic; }
+  .no-issues { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* Images */
+  .image-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .image-row:last-child { border-bottom: none; }
+  .image-label { font-size: 13px; color: #334155; }
+  .image-score-bar { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-gray { background: #f1f5f9; color: #64748b; }
+
+  /* Articles table */
+  .table-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-input { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; width: 240px; background: #f8fafc; outline: none; }
+  .search-input:focus { border-color: #3b82f6; background: white; }
+  .filter-select { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: #f8fafc; cursor: pointer; outline: none; }
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: #f8fafc; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { background: #f1f5f9; }
+  thead th.sorted-asc::after { content: ' ↑'; color: #3b82f6; }
+  thead th.sorted-desc::after { content: ' ↓'; color: #3b82f6; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+  tbody tr:hover { background: #f8fafc; }
+  td { padding: 8px 12px; vertical-align: middle; }
+  .td-center { text-align: center; }
+  .td-title { max-width: 320px; }
+  .article-link { color: #1e293b; font-weight: 500; }
+  .article-link:hover { color: #3b82f6; }
+  .inbound-count { font-weight: 600; color: #334155; }
+  .article-score { font-weight: 700; font-size: 14px; }
+  .table-footer { font-size: 12px; color: #94a3b8; margin-top: 8px; text-align: right; }
+
+  /* Stale pages */
+  .stale-empty { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* History */
+  .history-note { font-size: 13px; color: #64748b; }
+  .history-note code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+
+  /* Footer */
+  .footer { text-align: center; font-size: 12px; color: #94a3b8; padding: 24px; border-top: 1px solid #e2e8f0; margin-top: 24px; }
+
+  /* Weak pages */
+  .weak-card { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .weak-title { font-size: 13px; font-weight: 500; color: #1e293b; }
+  .weak-meta { display: flex; gap: 8px; align-items: center; }
+  .weak-words { font-size: 12px; color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>SEO Audit Dashboard</h1>
+    <p>https://blooom.nl &nbsp;·&nbsp; 19 februari 2026</p>
+  </div>
+  <div class="header-right">
+    
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="45.238934211693035"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#22c55e">82</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Row 1: Score + Stats + E-E-A-T -->
+  <div class="grid-3">
+
+    <div class="card score-card">
+      <div class="card-title">Algemene Score</div>
+      <div class="score-gauge">
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="45.238934211693035"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#22c55e">82</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg></div>
+      <div class="score-grade" style="color:#22c55e">Strong Site Authority</div>
+      <div class="score-sub">Gegenereerd op 19 februari 2026</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Statistieken</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">72</div>
+          <div class="stat-label">Pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">26</div>
+          <div class="stat-label">Pillar artikelen</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">2,033</div>
+          <div class="stat-label">Gem. woorden</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">72</div>
+          <div class="stat-label">Met TL;DR</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#22c55e">0</div>
+          <div class="stat-label">Orphan pages</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">1</div>
+          <div class="stat-label">Zwakke pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">1</div>
+          <div class="stat-label">Cannibalization</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">10</div>
+          <div class="stat-label">Topical clusters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">E-E-A-T Signalen</div>
+      <div class="eeat-score" style="color:#f59e0b">75/100</div>
+      <ul class="eeat-list">
+        <li class="eeat-signal">✓ Over/About pagina aanwezig</li><li class="eeat-signal">✓ Auteursveld aanwezig op 100% van pagina's</li><li class="eeat-signal">✓ FAQ aanwezig op 54 pagina's</li>
+        <li class="eeat-issue">⚠️ Weinig first-hand experience markers (1/72 pagina's)</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Images -->
+  <div class="card full-width">
+    <div class="card-title">Afbeeldingen Audit</div>
+    <div class="image-row">
+      <div class="image-label">Featured images (72/72)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#22c55e">100%</span>
+      </div>
+    </div>
+    <div class="image-row">
+      <div class="image-label">Inline afbeeldingen (3+ per artikel)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#22c55e">100%</span>
+      </div>
+    </div>
+    
+    
+  </div>
+
+  <!-- Row 3: Topical Clusters -->
+  <div class="card full-width">
+    <div class="card-title">Topical Authority Clusters</div>
+    <div class="clusters-grid">
+      
+      <div class="cluster-card ">
+        <div class="cluster-name">Coaching Methodes</div>
+        <div class="cluster-count" style="color:#22c55e">13 artikelen</div>
+        <div class="cluster-meta">6 pillars · avg 2,063 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Coaching Trajecten</div>
+        <div class="cluster-count" style="color:#22c55e">13 artikelen</div>
+        <div class="cluster-meta">7 pillars · avg 1,983 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Software & Tools</div>
+        <div class="cluster-count" style="color:#22c55e">12 artikelen</div>
+        <div class="cluster-meta">5 pillars · avg 2,344 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Klanten Werven</div>
+        <div class="cluster-count" style="color:#f59e0b">7 artikelen</div>
+        <div class="cluster-meta">3 pillars · avg 2,135 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Administratie & Planning</div>
+        <div class="cluster-count" style="color:#f59e0b">5 artikelen</div>
+        <div class="cluster-meta">2 pillars · avg 2,496 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Marketing & Zichtbaarheid</div>
+        <div class="cluster-count" style="color:#f59e0b">4 artikelen</div>
+        <div class="cluster-meta">0 pillars · avg 1,706 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Online Coaching</div>
+        <div class="cluster-count" style="color:#f59e0b">4 artikelen</div>
+        <div class="cluster-meta">2 pillars · avg 2,066 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Tarieven & Business</div>
+        <div class="cluster-count" style="color:#3b82f6">2 artikelen</div>
+        <div class="cluster-meta">1 pillar · avg 1,834 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Certificering & Groei</div>
+        <div class="cluster-count" style="color:#3b82f6">2 artikelen</div>
+        <div class="cluster-meta">0 pillars · avg 1,734 woorden</div>
+        
+      </div>
+      <div class="cluster-card cluster-thin">
+        <div class="cluster-name">Doelgroep & Niche</div>
+        <div class="cluster-count" style="color:#ef4444">1 artikel</div>
+        <div class="cluster-meta">1 pillar · avg 3,228 woorden</div>
+        <div class="cluster-warning">⚠️ Te dun — voeg artikelen toe</div>
+      </div>
+    </div>
+    <div class="uncategorized-note">⚠️ <strong>19 niet-gecategoriseerde pagina's</strong> — voeg <code>category:</code> toe in frontmatter voor betere clustering</div>
+  </div>
+
+  <!-- Row 4: Cannibalization + Weak Pages -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-title">Cannibalization (1 clusters)</div>
+      
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "klanten werven"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Klanten Werven als Coach: Complete Marketing Gids [2026]</span>
+            <span class="cannibal-words">1,610 woorden</span>
+            <span class="cannibal-links">16 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">10 Bewezen Manieren om Als Coach Klanten te Werven</span>
+            <span class="cannibal-words">1,927 woorden</span>
+            <span class="cannibal-links">9 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Zwakke Pagina's (1)</div>
+      
+          <div class="weak-card">
+            <div class="weak-title">Calendly Alternatieven voor Coaches: 7 Opties Vergeleken [2026]</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,264 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+    </div>
+
+  </div>
+
+  <!-- Row 5: Freshness -->
+  <div class="card full-width">
+    <div class="card-title">Content Freshness — Verouderd (&gt;12 maanden)</div>
+    <div class="stale-empty">✓ Alle pagina's zijn recent bijgewerkt</div>
+  </div>
+
+  <!-- Row 6: Articles Table -->
+  <div class="card full-width">
+    <div class="card-title">Alle Artikelen (72)</div>
+    <div class="table-controls">
+      <input type="text" class="search-input" id="articleSearch" placeholder="Zoek artikel...">
+      <select class="filter-select" id="pillarFilter">
+        <option value="">Alle typen</option>
+        <option value="pillar">Alleen pillar</option>
+        <option value="regular">Alleen regulier</option>
+      </select>
+      <select class="filter-select" id="tldrFilter">
+        <option value="">Alle TL;DR</option>
+        <option value="yes">Met TL;DR</option>
+        <option value="no">Zonder TL;DR</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table id="articlesTable">
+        <thead>
+          <tr>
+            <th data-col="title">Artikel</th>
+            <th data-col="words" class="sorted-desc">Woorden</th>
+            <th data-col="tldr">TL;DR</th>
+            <th data-col="faq">FAQ</th>
+            <th data-col="pillar">Pillar</th>
+            <th data-col="takeaways">Takeaways</th>
+            <th data-col="links">Inbound ↓</th>
+            <th data-col="score">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+      <tr class="article-row" data-words="5270" data-links="20" data-score="90">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-administratie-complete-gids" target="_blank" class="article-link" title="Coaching Administratie: Van Chaos naar Systeem">Coaching Administratie: Van Chaos naar Systeem</a></td>
+        <td class="td-center"><span class="badge badge-green">5,270</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">20</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2919" data-links="16" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coach-tarieven-nederland" target="_blank" class="article-link" title="Coach Tarieven Nederland 2026: Wat Rekenen Coaches?">Coach Tarieven Nederland 2026: Wat Rekenen Coaches?</a></td>
+        <td class="td-center"><span class="badge badge-green">2,919</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">16</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1610" data-links="16" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/klanten-werven-coach-complete-gids" target="_blank" class="article-link" title="Klanten Werven als Coach: Complete Marketing Gids [2026]">Klanten Werven als Coach: Complete Marketing Gids [2…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,610</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">16</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1717" data-links="14" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/welkom-bij-blooom" target="_blank" class="article-link" title="Wat is Blooom? Coaching Software voor Nederlandse Coaches">Wat is Blooom? Coaching Software voor Nederlandse Co…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,717</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">14</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2082" data-links="12" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-pakketten-samenstellen" target="_blank" class="article-link" title="Coaching Pakketten Samenstellen: Complete Gids met Prijsstrategieën [2026]">Coaching Pakketten Samenstellen: Complete Gids met P…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,082</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">12</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1660" data-links="12" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/klantenbeheer-coaches" target="_blank" class="article-link" title="Klantenbeheer voor Coaches: Complete Gids [2026]">Klantenbeheer voor Coaches: Complete Gids [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,660</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">12</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="3081" data-links="11" data-score="65">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-methodes-technieken-overzicht" target="_blank" class="article-link" title="Coaching Methodes en Technieken">Coaching Methodes en Technieken</a></td>
+        <td class="td-center"><span class="badge badge-green">3,081</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">65</span></td>
+      </tr>
+      <tr class="article-row" data-words="2654" data-links="11" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/online-coaching-complete-gids" target="_blank" class="article-link" title="Online Coaching: Complete Gids voor Coaches [2026]">Online Coaching: Complete Gids voor Coaches [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">2,654</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1884" data-links="11" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-administratie" target="_blank" class="article-link" title="Coaching Administratie voor Starters: De Basis Op Orde [2026]">Coaching Administratie voor Starters: De Basis Op Or…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,884</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1853" data-links="11" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-software-vergelijken-nederland" target="_blank" class="article-link" title="Coaching Software Vergelijken">Coaching Software Vergelijken</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,853</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2704" data-links="10" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coachingspraktijk-starten-nederland" target="_blank" class="article-link" title="Coachingspraktijk Starten in Nederland: De Complete Gids [2026]">Coachingspraktijk Starten in Nederland: De Complete …</a></td>
+        <td class="td-center"><span class="badge badge-green">2,704</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">10</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2050" data-links="10" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/grow-model-coaching" target="_blank" class="article-link" title="Het GROW-Model: Complete Gids met 40+ Voorbeeldvragen [2026]">Het GROW-Model: Complete Gids met 40+ Voorbeeldvrage…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,050</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">10</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1927" data-links="9" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/klanten-werven-coach" target="_blank" class="article-link" title="10 Bewezen Manieren om Als Coach Klanten te Werven">10 Bewezen Manieren om Als Coach Klanten te Werven</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,927</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="1772" data-links="9" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/intake-formulieren-coaches" target="_blank" class="article-link" title="Intake Formulieren voor Coaches: Templates & Best Practices [2026]">Intake Formulieren voor Coaches: Templates & Best Pr…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,772</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2281" data-links="8" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-traject-structureren" target="_blank" class="article-link" title="Coaching Trajecten Structureren: Complete Gids met Voorbeelden [2026]">Coaching Trajecten Structureren: Complete Gids met V…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,281</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2036" data-links="8" data-score="65">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-notities-maken" target="_blank" class="article-link" title="Coaching Notities Maken: Complete Gids met Templates [2026]">Coaching Notities Maken: Complete Gids met Templates…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,036</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">65</span></td>
+      </tr>
+      <tr class="article-row" data-words="1750" data-links="8" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-sessies-trajecten-complete-gids" target="_blank" class="article-link" title="Coaching Sessies en Trajecten: Complete Gids voor Coaches [2026]">Coaching Sessies en Trajecten: Complete Gids voor Co…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,750</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1726" data-links="8" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/sessienotities-coach" target="_blank" class="article-link" title="Sessienotities Maken als Coach: Complete Gids [2026]">Sessienotities Maken als Coach: Complete Gids [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,726</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1602" data-links="8" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-vragen-lijst" target="_blank" class="article-link" title="70+ Krachtige Coaching Vragen voor Elke Situatie">70+ Krachtige Coaching Vragen voor Elke Situatie</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,602</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="1503" data-links="8" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/avg-voor-coaches" target="_blank" class="article-link" title="AVG voor Coaches: Privacy en Dossiervorming">AVG voor Coaches: Privacy en Dossiervorming</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,503</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="2120" data-links="7" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/aantal-coaching-sessies" target="_blank" class="article-link" title="Hoeveel Coaching Sessies Heeft een Cliënt Nodig? Data & Richtlijnen [2026]">Hoeveel Coaching Sessies Heeft een Cliënt Nodig? Dat…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,120</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2112" data-links="7" data-score="65">
+        <td class="td-title"><a href="https://blooom.nl/blog/intake-gesprek-coach" target="_blank" class="article-link" title="Het Perfecte Intake Gesprek">Het Perfecte Intake Gesprek</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,112</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">65</span></td>
+      </tr>
+      <tr class="article-row" data-words="1939" data-links="7" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-praktijk-schaalbaar-maken" target="_blank" class="article-link" title="Coaching Praktijk Schaalbaar Maken: Strategie & Systemen [2026]">Coaching Praktijk Schaalbaar Maken: Strategie & Syst…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,939</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1730" data-links="7" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/client-portal-voordelen" target="_blank" class="article-link" title="Cliëntportaal Voordelen: Waarom Coaches Het Nodig Hebben [2026]">Cliëntportaal Voordelen: Waarom Coaches Het Nodig He…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,730</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2447" data-links="6" data-score="90">
+        <td class="td-title"><a href="https://blooom.nl/blog/coach-worden-nederland" target="_blank" class="article-link" title="Coach Worden in Nederland: Complete Startgids [2026]">Coach Worden in Nederland: Complete Startgids [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,447</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2270" data-links="6" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/oplossingsgericht-coachen" target="_blank" class="article-link" title="Oplossingsgericht Coachen: Complete Gids met Technieken [2026]">Oplossingsgericht Coachen: Complete Gids met Technie…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,270</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2204" data-links="6" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-evaluatie-afronding" target="_blank" class="article-link" title="Coaching Traject Evalueren en Afronden: Complete Gids [2026]">Coaching Traject Evalueren en Afronden: Complete Gid…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,204</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1992" data-links="6" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/seo-voor-coaches" target="_blank" class="article-link" title="SEO voor Coaches: Gevonden Worden">SEO voor Coaches: Gevonden Worden</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,992</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1952" data-links="6" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coachcontract-maken" target="_blank" class="article-link" title="Coachcontract Maken: Gids + Template">Coachcontract Maken: Gids + Template</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,952</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1550" data-links="6" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/succesvolle-website-coaches" target="_blank" class="article-link" title="Een Succesvolle Coaching Website Bouwen">Een Succesvolle Coaching Website Bouwen</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,550</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="2713" data-links="5" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/facturen-maken-coach" target="_blank" class="article-link" title="Facturen Maken als Coach: Complete Gids met Templates [2026]">Facturen Maken als Coach: Complete Gids met Template…</a></td>
+        <td class="td-center"><span class="badge badge-green">2,713</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2513" data-links="5" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/excel-naar-coaching-software" target="_blank" class="article-link" title="Van Excel naar Coaching Software: Migratiegids [2026]">Van Excel naar Coaching Software: Migratiegids [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">2,513</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2110" data-links="5" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-administratie-automatiseren" target="_blank" class="article-link" title="Coaching Administratie Automatiseren: Complete Gids [2026]">Coaching Administratie Automatiseren: Complete Gids …</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,110</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2023" data-links="5" data-score="80">
+        <td class="td-title"><a href="https://blooom.nl/blog/scarf-model-coaching" target="_blank" class="article-link" title="Het SCARF-Model: Begrijp Motivatie en Weerstand in Coaching [2026]">Het SCARF-Model: Begrijp Motivatie en Weerstand in C…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,023</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="1974" data-links="5" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/reflectiemethodes-coachees" target="_blank" class="article-link" title="Reflectiemethodes voor Coachees: 15 Effectieve Technieken [2026]">Reflectiemethodes voor Coachees: 15 Effectieve Techn…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,974</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1915" data-links="5" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/soorten-coaching-overzicht" target="_blank" class="article-link" title="17 Soorten Coaching Uitgelegd">17 Soorten Coaching Uitgelegd</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,915</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="1852" data-links="5" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/ai-in-coaching" target="_blank" class="article-link" title="AI in Coaching: Kansen en Toepassingen">AI in Coaching: Kansen en Toepassingen</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,852</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="1657" data-links="5" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/online-agenda-coach" target="_blank" class="article-link" title="Online Agenda voor Coaches: Keuze & Implementatie [2026]">Online Agenda voor Coaches: Keuze & Implementatie [2…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,657</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2311" data-links="4" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/eerste-coaching-klant-vinden" target="_blank" class="article-link" title="Je Eerste Coachingsklant Vinden">Je Eerste Coachingsklant Vinden</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,311</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="2118" data-links="4" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/nlp-technieken-coaches" target="_blank" class="article-link" title="NLP Technieken voor Coaches: 12 Praktische Tools [2026]">NLP Technieken voor Coaches: 12 Praktische Tools [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,118</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1968" data-links="4" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-follow-up" target="_blank" class="article-link" title="Follow-up na Coaching: De Complete Gids voor Nazorg [2026]">Follow-up na Coaching: De Complete Gids voor Nazorg …</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,968</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1931" data-links="4" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/groepsprogramma-coach" target="_blank" class="article-link" title="Groepsprogramma als Coach: Van 1-op-1 naar Groepen [2026]">Groepsprogramma als Coach: Van 1-op-1 naar Groepen […</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,931</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1910" data-links="4" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/online-coach-worden" target="_blank" class="article-link" title="Van Fysiek naar Online Coaching">Van Fysiek naar Online Coaching</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,910</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1682" data-links="4" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/voortgang-bijhouden-coachee" target="_blank" class="article-link" title="Voortgang Bijhouden in Coaching: Meetbare Resultaten [2026]">Voortgang Bijhouden in Coaching: Meetbare Resultaten…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,682</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1667" data-links="4" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-certificering-nederland" target="_blank" class="article-link" title="De Beste Coaching Certificeringen in Nederland">De Beste Coaching Certificeringen in Nederland</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,667</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="1617" data-links="4" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/social-media-coaches" target="_blank" class="article-link" title="Social Media voor Coaches: Welke Platforms Werken?">Social Media voor Coaches: Welke Platforms Werken?</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,617</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="1616" data-links="4" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/afspraken-plannen-coaching-praktijk" target="_blank" class="article-link" title="Afspraken Plannen in je Coaching Praktijk: Best Practices [2026]">Afspraken Plannen in je Coaching Praktijk: Best Prac…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,616</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1615" data-links="4" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/no-shows-coaching" target="_blank" class="article-link" title="No-Shows in Coaching: Voorkomen en Aanpakken [2026]">No-Shows in Coaching: Voorkomen en Aanpakken [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,615</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1606" data-links="4" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/blog-ideeen-coaches" target="_blank" class="article-link" title="30 Blog Ideeën voor Coaches">30 Blog Ideeën voor Coaches</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,606</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="2281" data-links="3" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/meer-klanten-coachen-tegelijk" target="_blank" class="article-link" title="Meer Klanten Tegelijk Coachen: Schalen Zonder Kwaliteitsverlies [2026]">Meer Klanten Tegelijk Coachen: Schalen Zonder Kwalit…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,281</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="2004" data-links="3" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/crm-voor-coaches" target="_blank" class="article-link" title="CRM voor Coaches: Waarom een Gewoon CRM Niet Werkt">CRM voor Coaches: Waarom een Gewoon CRM Niet Werkt</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,004</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1931" data-links="3" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-sales-funnel" target="_blank" class="article-link" title="Van Lead naar Klant: De Coaching Sales Funnel">Van Lead naar Klant: De Coaching Sales Funnel</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,931</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1908" data-links="3" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/ikigai-coaching" target="_blank" class="article-link" title="Ikigai in Coaching: Het Japanse Model voor Zingeving [2026]">Ikigai in Coaching: Het Japanse Model voor Zingeving…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,908</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1677" data-links="3" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/professioneel-communiceren-coachees" target="_blank" class="article-link" title="Professioneel Communiceren met Coachees: Complete Gids [2026]">Professioneel Communiceren met Coachees: Complete Gi…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,677</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="2248" data-links="2" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/trajecten-beheren" target="_blank" class="article-link" title="Trajecten Beheren als Coach: Overzicht Houden over Alle Cliënten [2026]">Trajecten Beheren als Coach: Overzicht Houden over A…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,248</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="1842" data-links="2" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-markt-nederland" target="_blank" class="article-link" title="Coaching in Nederland: Marktcijfers en Trends 2026">Coaching in Nederland: Marktcijfers en Trends 2026</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,842</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="1801" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/nobco-lidmaatschap" target="_blank" class="article-link" title="NOBCO Lidmaatschap: Is Het de Investering Waard? [2026]">NOBCO Lidmaatschap: Is Het de Investering Waard? [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,801</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1787" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/whatsapp-alternatief-coaches" target="_blank" class="article-link" title="WhatsApp Alternatief voor Coaches: Professionelere Opties [2026]">WhatsApp Alternatief voor Coaches: Professionelere O…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,787</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1779" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/intake-vragenlijst-coaching" target="_blank" class="article-link" title="Intake Vragenlijst Coaching: 50 Essentiële Vragen [2026]">Intake Vragenlijst Coaching: 50 Essentiële Vragen [2…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,779</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1743" data-links="2" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/tijd-besparen-coach" target="_blank" class="article-link" title="Tijd Besparen als Coach: 7 Praktische Tips [2026]">Tijd Besparen als Coach: 7 Praktische Tips [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,743</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="1730" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-sessie-voorbereiden" target="_blank" class="article-link" title="Coaching Sessie Voorbereiden: Checklist & Best Practices [2026]">Coaching Sessie Voorbereiden: Checklist & Best Pract…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,730</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1706" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/huiswerk-coaching-clienten" target="_blank" class="article-link" title="Huiswerk voor Coaching Cliënten: 25 Effectieve Opdrachten [2026]">Huiswerk voor Coaching Cliënten: 25 Effectieve Opdra…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,706</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1675" data-links="2" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/vergelijkingsplatforms-coaches" target="_blank" class="article-link" title="Vergelijkingsplatforms voor Coaches in Nederland">Vergelijkingsplatforms voor Coaches in Nederland</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,675</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="1636" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/coaching-boeken" target="_blank" class="article-link" title="15 Beste Boeken voor Coaches">15 Beste Boeken voor Coaches</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,636</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1606" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/toekomst-van-coaching" target="_blank" class="article-link" title="De Toekomst van Coaching: AI, Automatisering en">De Toekomst van Coaching: AI, Automatisering en</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,606</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1585" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/passief-inkomen-coach" target="_blank" class="article-link" title="Passief Inkomen als Coach: 5 Realistische Strategieën [2026]">Passief Inkomen als Coach: 5 Realistische Strategieë…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,585</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1573" data-links="2" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/fulltime-parttime-coach" target="_blank" class="article-link" title="Fulltime vs Parttime Coach">Fulltime vs Parttime Coach</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,573</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="1561" data-links="2" data-score="60">
+        <td class="td-title"><a href="https://blooom.nl/blog/te-veel-administratie" target="_blank" class="article-link" title="Te Veel Administratie als Coach? 7 Oplossingen [2026]">Te Veel Administratie als Coach? 7 Oplossingen [2026]</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,561</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">60</span></td>
+      </tr>
+      <tr class="article-row" data-words="1264" data-links="2" data-score="55">
+        <td class="td-title"><a href="https://blooom.nl/blog/calendly-alternatief-coaches" target="_blank" class="article-link" title="Calendly Alternatieven voor Coaches: 7 Opties Vergeleken [2026]">Calendly Alternatieven voor Coaches: 7 Opties Vergel…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,264</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">55</span></td>
+      </tr>
+      <tr class="article-row" data-words="2041" data-links="1" data-score="45">
+        <td class="td-title"><a href="https://blooom.nl/blog/online-coaching-tips" target="_blank" class="article-link" title="Online Coaching Sessies: 12 Tips voor Effectief Videobellen [2026]">Online Coaching Sessies: 12 Tips voor Effectief Vide…</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,041</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">1</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">45</span></td>
+      </tr>
+      <tr class="article-row" data-words="4574" data-links="0" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/beste-tool-coaches" target="_blank" class="article-link" title="Beste Tool voor Coaches in 2026: Complete Vergelijking">Beste Tool voor Coaches in 2026: Complete Vergelijking</a></td>
+        <td class="td-center"><span class="badge badge-green">4,574</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+      <tr class="article-row" data-words="3228" data-links="0" data-score="70">
+        <td class="td-title"><a href="https://blooom.nl/blog/coachingsniche-kiezen" target="_blank" class="article-link" title="Coachingsniche Kiezen: Hoe Specialisatie Zorgt voor Meer Klanten [2026]">Coachingsniche Kiezen: Hoe Specialisatie Zorgt voor …</a></td>
+        <td class="td-center"><span class="badge badge-green">3,228</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#f59e0b">70</span></td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="tableCount">72 artikelen</div>
+  </div>
+
+  <!-- History placeholder -->
+  <div class="card full-width">
+    <div class="card-title">Audit Geschiedenis</div>
+    <p class="history-note">Historische scores worden bijgehouden zodra je meerdere audits hebt gedraaid. Sla dit HTML bestand op als <code>audit-2026-02-19.html</code> om trends te zien.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  SEO Audit Dashboard · Gegenereerd door OpenClaw SEO Audit Tool · 19 februari 2026
+</div>
+
+<script>
+// Table search & filter
+const searchInput = document.getElementById('articleSearch');
+const pillarFilter = document.getElementById('pillarFilter');
+const tldrFilter = document.getElementById('tldrFilter');
+const tbody = document.querySelector('#articlesTable tbody');
+const tableCount = document.getElementById('tableCount');
+const totalRows = 72;
+
+function filterTable() {
+  const q = searchInput.value.toLowerCase();
+  const pf = pillarFilter.value;
+  const tf = tldrFilter.value;
+  let visible = 0;
+  document.querySelectorAll('.article-row').forEach(row => {
+    const title = row.querySelector('.td-title').textContent.toLowerCase();
+    const isPillar = row.querySelector('.badge-blue') !== null;
+    const hasTldr = row.querySelectorAll('td')[2].querySelector('.badge-green') !== null;
+    let show = true;
+    if (q && !title.includes(q)) show = false;
+    if (pf === 'pillar' && !isPillar) show = false;
+    if (pf === 'regular' && isPillar) show = false;
+    if (tf === 'yes' && !hasTldr) show = false;
+    if (tf === 'no' && hasTldr) show = false;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  tableCount.textContent = visible === totalRows ? totalRows + ' artikelen' : visible + ' van ' + totalRows + ' artikelen';
+}
+
+searchInput.addEventListener('input', filterTable);
+pillarFilter.addEventListener('change', filterTable);
+tldrFilter.addEventListener('change', filterTable);
+
+// Table sorting
+let sortCol = 'links';
+let sortDir = -1;
+
+document.querySelectorAll('#articlesTable thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = -1; }
+    document.querySelectorAll('#articlesTable thead th').forEach(h => h.classList.remove('sorted-asc','sorted-desc'));
+    th.classList.add(sortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+    sortTable();
+  });
+});
+
+function sortTable() {
+  const rows = [...document.querySelectorAll('.article-row')];
+  rows.sort((a, b) => {
+    let va, vb;
+    switch(sortCol) {
+      case 'words': va = +a.dataset.words; vb = +b.dataset.words; break;
+      case 'links': va = +a.dataset.links; vb = +b.dataset.links; break;
+      case 'score': va = +a.dataset.score; vb = +b.dataset.score; break;
+      case 'title': va = a.querySelector('.td-title').textContent.trim(); vb = b.querySelector('.td-title').textContent.trim(); return sortDir * va.localeCompare(vb, 'nl');
+      case 'tldr': va = a.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; break;
+      case 'faq': va = a.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; break;
+      case 'pillar': va = a.querySelector('.badge-blue') ? 1 : 0; vb = b.querySelector('.badge-blue') ? 1 : 0; break;
+      case 'takeaways': va = a.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; vb = b.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; break;
+      default: return 0;
+    }
+    return sortDir * (va - vb);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+</body>
+</html>
