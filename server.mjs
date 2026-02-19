@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { readFileSync, existsSync } from 'fs';
 import { spawn } from 'child_process';
+import { randomUUID } from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,9 @@ const PASS = process.env.DASH_PASS || 'blooom2026';
 const WORKSPACE = '/home/ubuntu/.openclaw/workspace-main';
 const PUBLISH_SCRIPT = path.join(WORKSPACE, 'skills/seo-audit/scripts/publish-dashboard.mjs');
 
+// Session token — injected into index.html so fetch() can use it
+const SESSION_TOKEN = randomUUID();
+
 // Load sites config
 const sitesPath = path.join(__dirname, 'sites.json');
 const SITES = JSON.parse(readFileSync(sitesPath, 'utf8'));
@@ -29,17 +33,28 @@ const SITES = JSON.parse(readFileSync(sitesPath, 'utf8'));
 // Track running audits
 const runningAudits = new Set();
 
-// Basic auth middleware
-app.use((req, res, next) => {
+// Auth middleware — checks Basic Auth OR session token
+function requireAuth(req, res, next) {
+  if (req.query.token === SESSION_TOKEN) return next();
   const auth = req.headers['authorization'];
-  if (!auth || !auth.startsWith('Basic ')) {
-    res.set('WWW-Authenticate', 'Basic realm="SEO Dashboard"');
-    return res.status(401).send('Toegang vereist authenticatie.');
+  if (auth && auth.startsWith('Basic ')) {
+    const decoded = Buffer.from(auth.slice(6), 'base64').toString();
+    const colonIdx = decoded.indexOf(':');
+    const user = decoded.slice(0, colonIdx);
+    const pass = decoded.slice(colonIdx + 1);
+    if (user === USER && pass === PASS) return next();
   }
-  const [user, pass] = Buffer.from(auth.slice(6), 'base64').toString().split(':');
-  if (user === USER && pass === PASS) return next();
   res.set('WWW-Authenticate', 'Basic realm="SEO Dashboard"');
-  return res.status(401).send('Ongeldige inloggegevens.');
+  return res.status(401).send('Toegang vereist authenticatie.');
+}
+
+app.use(requireAuth);
+
+// Serve index.html with injected session token
+app.get('/', (req, res) => {
+  const html = readFileSync(path.join(__dirname, 'index.html'), 'utf8')
+    .replace('__SESSION_TOKEN__', SESSION_TOKEN);
+  res.type('html').send(html);
 });
 
 // API: list sites
@@ -82,7 +97,8 @@ app.get('/api/audit/:slug', (req, res) => {
     PUBLISH_SCRIPT,
     '--dir', site.contentDir,
     '--url', site.url,
-    '--name', site.name
+    '--name', site.name,
+    '--slug', site.slug
   ], { cwd: WORKSPACE });
 
   proc.stdout.on('data', d => send('log', d.toString().trim()));

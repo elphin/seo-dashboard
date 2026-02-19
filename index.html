@@ -72,6 +72,7 @@
 <div class="footer">SEO Audit Tool &middot; Elphinstone</div>
 
 <script>
+var SESSION_TOKEN = '__SESSION_TOKEN__';
 var sitesData = [];
 var manifestData = { sites: [] };
 
@@ -155,6 +156,14 @@ function closeTerminal(slug) {
   if (term) term.classList.remove('visible');
 }
 
+function appendLog(log, text, type) {
+  var line = document.createElement('div');
+  line.className = 'log-line' + (type ? ' ' + type : '');
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
 function startAudit(slug) {
   var site = sitesData.find(function(s) { return s.slug === slug; });
   if (!site || !site.available) return;
@@ -167,43 +176,100 @@ function startAudit(slug) {
   if (term) term.classList.add('visible');
   if (log) log.innerHTML = '';
 
-  var es = new EventSource('/api/audit/' + slug);
+  // Use fetch + ReadableStream so auth headers are included automatically
+  fetch('/api/audit/' + slug + '?token=' + SESSION_TOKEN)
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
 
-  es.onmessage = function(e) {
-    var msg = JSON.parse(e.data);
-    if (!log) return;
-
-    var line = document.createElement('div');
-    line.className = 'log-line';
-    if (msg.type === 'done') line.className += ' success';
-    else if (msg.type === 'error') line.className += ' error';
-    else if (msg.type === 'start') line.className += ' info';
-    line.textContent = msg.data;
-    log.appendChild(line);
-    log.scrollTop = log.scrollHeight;
-
-    if (msg.type === 'done' || msg.type === 'error') {
-      es.close();
+      function read() {
+        return reader.read().then(function(result) {
+          if (result.done) {
+            if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
+            return;
+          }
+          buffer += decoder.decode(result.value, { stream: true });
+          var parts = buffer.split('\n\n');
+          buffer = parts.pop();
+          parts.forEach(function(part) {
+            var dataLine = part.split('\n').find(function(l) { return l.startsWith('data: '); });
+            if (!dataLine) return;
+            try {
+              var msg = JSON.parse(dataLine.slice(6));
+              if (msg.type === 'done') appendLog(log, msg.data, 'success');
+              else if (msg.type === 'error') appendLog(log, msg.data, 'error');
+              else if (msg.type === 'start') appendLog(log, msg.data, 'info');
+              else appendLog(log, msg.data, '');
+              if (msg.type === 'done' || msg.type === 'error') {
+                if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
+                // Reload only the dashboard rows, not the whole page
+                loadManifest(false).then(function() { updateDashboardRows(slug); });
+              }
+            } catch(e) {}
+          });
+          return read();
+        });
+      }
+      return read();
+    })
+    .catch(function(e) {
       if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
-      // Reload manifest to show new dashboard
-      loadManifest(true);
-    }
-  };
+      appendLog(log, 'Fout: ' + e.message, 'error');
+    });
+}
 
-  es.onerror = function() {
-    es.close();
-    if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
-    if (log) {
-      var line = document.createElement('div');
-      line.className = 'log-line error';
-      line.textContent = 'Verbinding verbroken.';
-      log.appendChild(line);
+// Update only the dashboard rows for one site (without touching terminal)
+function updateDashboardRows(slug) {
+  var ms = getManifestSite(slug);
+  var siteEl = document.getElementById('site-' + slug);
+  if (!siteEl || !ms) return;
+
+  // Remove old dashboard rows (everything between site-header and audit-terminal)
+  var toRemove = [];
+  var children = siteEl.children;
+  for (var i = 0; i < children.length; i++) {
+    var el = children[i];
+    if (!el.classList.contains('site-header') && !el.classList.contains('audit-terminal')) {
+      toRemove.push(el);
     }
-  };
+  }
+  toRemove.forEach(function(el) { siteEl.removeChild(el); });
+
+  // Insert new rows before terminal
+  var terminal = siteEl.querySelector('.audit-terminal');
+  var site = sitesData.find(function(s) { return s.slug === slug; });
+
+  // Update score badge
+  var scoreBadge = siteEl.querySelector('.score-badge');
+  if (scoreBadge && ms.latestScore) {
+    scoreBadge.className = 'score-badge ' + scoreClass(ms.latestScore);
+    scoreBadge.textContent = ms.latestScore + '/100';
+  }
+
+  if (ms.dashboards && ms.dashboards.length) {
+    ms.dashboards.forEach(function(d) {
+      var dc = scoreClass(d.score);
+      var row = document.createElement('div');
+      row.className = 'dashboard-row';
+      row.innerHTML = '<div class="dashboard-date">' + d.label + '</div>' +
+        '<div class="dashboard-meta">' +
+          '<span class="score-badge ' + dc + '">' + d.score + '/100</span>' +
+          '<a href="' + d.file + '" class="btn-view" target="_blank">Bekijken</a>' +
+        '</div>';
+      siteEl.insertBefore(row, terminal);
+    });
+  } else {
+    var noAudit = document.createElement('div');
+    noAudit.className = 'no-audits';
+    noAudit.textContent = 'Nog geen audits uitgevoerd voor deze site.';
+    siteEl.insertBefore(noAudit, terminal);
+  }
 }
 
 function loadSites() {
-  return fetch('/api/sites')
+  return fetch('/api/sites?token=' + SESSION_TOKEN)
     .then(function(r) { return r.json(); })
     .then(function(data) { sitesData = data; });
 }
