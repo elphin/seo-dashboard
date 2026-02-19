@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Audit Dashboard — https://upkeeponline.nl</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .header-left h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header-left p { font-size: 13px; color: #94a3b8; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  /* Layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+  .full-width { margin-bottom: 24px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e2e8f0; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: 16px; }
+
+  /* Score gauge */
+  .score-card { display: flex; flex-direction: column; align-items: center; }
+  .score-gauge { margin-bottom: 8px; }
+  .score-grade { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .score-sub { font-size: 12px; color: #94a3b8; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-item { text-align: center; padding: 12px 8px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #1e293b; }
+  .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* E-E-A-T */
+  .eeat-score { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+  .eeat-list { list-style: none; }
+  .eeat-list li { font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
+  .eeat-list li:last-child { border-bottom: none; }
+  .eeat-signal { color: #22c55e; }
+  .eeat-issue { color: #f59e0b; }
+
+  /* Cluster grid */
+  .clusters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .cluster-card { background: #f8fafc; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0; }
+  .cluster-card.cluster-thin { border-color: #fbbf24; background: #fffbeb; }
+  .cluster-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155; }
+  .cluster-count { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+  .cluster-meta { font-size: 11px; color: #94a3b8; }
+  .cluster-warning { font-size: 11px; color: #b45309; margin-top: 6px; }
+  .uncategorized-note { font-size: 13px; color: #64748b; margin-top: 12px; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+
+  /* Cannibalization */
+  .cannibal-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .cannibal-keyword { font-size: 14px; font-weight: 600; color: #c2410c; margin-bottom: 10px; }
+  .cannibal-pages { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .cannibal-page { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 6px 10px; background: white; border-radius: 6px; }
+  .cannibal-title { flex: 1; font-weight: 500; }
+  .cannibal-words, .cannibal-links { color: #64748b; font-size: 12px; white-space: nowrap; }
+  .cannibal-tip { font-size: 12px; color: #78716c; font-style: italic; }
+  .no-issues { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* Images */
+  .image-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .image-row:last-child { border-bottom: none; }
+  .image-label { font-size: 13px; color: #334155; }
+  .image-score-bar { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-gray { background: #f1f5f9; color: #64748b; }
+
+  /* Articles table */
+  .table-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-input { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; width: 240px; background: #f8fafc; outline: none; }
+  .search-input:focus { border-color: #3b82f6; background: white; }
+  .filter-select { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: #f8fafc; cursor: pointer; outline: none; }
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: #f8fafc; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { background: #f1f5f9; }
+  thead th.sorted-asc::after { content: ' ↑'; color: #3b82f6; }
+  thead th.sorted-desc::after { content: ' ↓'; color: #3b82f6; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+  tbody tr:hover { background: #f8fafc; }
+  td { padding: 8px 12px; vertical-align: middle; }
+  .td-center { text-align: center; }
+  .td-title { max-width: 320px; }
+  .article-link { color: #1e293b; font-weight: 500; }
+  .article-link:hover { color: #3b82f6; }
+  .inbound-count { font-weight: 600; color: #334155; }
+  .article-score { font-weight: 700; font-size: 14px; }
+  .table-footer { font-size: 12px; color: #94a3b8; margin-top: 8px; text-align: right; }
+
+  /* Stale pages */
+  .stale-empty { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* History */
+  .history-note { font-size: 13px; color: #64748b; }
+  .history-note code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+
+  /* Footer */
+  .footer { text-align: center; font-size: 12px; color: #94a3b8; padding: 24px; border-top: 1px solid #e2e8f0; margin-top: 24px; }
+
+  /* Weak pages */
+  .weak-card { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .weak-title { font-size: 13px; font-weight: 500; color: #1e293b; }
+  .weak-meta { display: flex; gap: 8px; align-items: center; }
+  .weak-words { font-size: 12px; color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>SEO Audit Dashboard</h1>
+    <p>https://upkeeponline.nl &nbsp;·&nbsp; 19 februari 2026</p>
+  </div>
+  <div class="header-right">
+    
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="185.98228509251575"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#ef4444">26</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Row 1: Score + Stats + E-E-A-T -->
+  <div class="grid-3">
+
+    <div class="card score-card">
+      <div class="card-title">Algemene Score</div>
+      <div class="score-gauge">
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="185.98228509251575"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#ef4444">26</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg></div>
+      <div class="score-grade" style="color:#ef4444">Major Gaps</div>
+      <div class="score-sub">Gegenereerd op 19 februari 2026</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Statistieken</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">16</div>
+          <div class="stat-label">Pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Pillar artikelen</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">1,092</div>
+          <div class="stat-label">Gem. woorden</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Met TL;DR</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#ef4444">11</div>
+          <div class="stat-label">Orphan pages</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">16</div>
+          <div class="stat-label">Zwakke pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">1</div>
+          <div class="stat-label">Cannibalization</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">4</div>
+          <div class="stat-label">Topical clusters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">E-E-A-T Signalen</div>
+      <div class="eeat-score" style="color:#ef4444">25/100</div>
+      <ul class="eeat-list">
+        <li class="eeat-signal">✓ Auteursveld aanwezig op 100% van pagina's</li>
+        <li class="eeat-issue">❌ Geen Over/About pagina gevonden</li><li class="eeat-issue">⚠️ Weinig first-hand experience markers (0/16 pagina's)</li><li class="eeat-issue">⚠️ FAQ ontbreekt op 15 pagina's</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Images -->
+  <div class="card full-width">
+    <div class="card-title">Afbeeldingen Audit</div>
+    <div class="image-row">
+      <div class="image-label">Featured images (16/16)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#22c55e">100%</span>
+      </div>
+    </div>
+    <div class="image-row">
+      <div class="image-label">Inline afbeeldingen (3+ per artikel)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:0%;background:#ef4444"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#ef4444">0%</span>
+      </div>
+    </div>
+    
+    
+    <div style="margin-top:12px">
+      <strong style="font-size:13px;color:#b45309">Te weinig inline afbeeldingen (16):</strong>
+      <ul style="margin-top:6px;font-size:12px;color:#64748b;list-style:disc;padding-left:20px">
+        <li>Tuigboek Bijhouden: Alles Wat Je Moet Weten als Schipper</li><li>CvO Verlengen: Complete Checklist voor Scheepseigenaren</li><li>BvT Aanvragen: Alles over het Bewijs van Toelating</li><li>Houtrot Herkennen en Voorkomen op je Houten Schip</li><li>Winteronderhoud: 20 Taken Die Je Dit Seizoen Niet Mag Vergeten</li><li>Onderhoud van de Bruine Vloot: Tradities en Moderne Aanpak</li><li>CvO Certificaat Verlengen: Stap-voor-Stap Uitleg</li><li>Digitaal vs. Papieren Logboek: Waarom Schippers Overstappen</li><li>Inspectie Voorbereiden: Zo Slaag Je Met Vlag en Wimpel</li><li>Mast en Tuigage: Jaarlijks Inspectieprotocol</li>
+        <li>... en 6 meer</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Row 3: Topical Clusters -->
+  <div class="card full-width">
+    <div class="card-title">Topical Authority Clusters</div>
+    <div class="clusters-grid">
+      
+      <div class="cluster-card ">
+        <div class="cluster-name">Onderhoud</div>
+        <div class="cluster-count" style="color:#f59e0b">7 artikelen</div>
+        <div class="cluster-meta">0 pillars · avg 1,095 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Regelgeving</div>
+        <div class="cluster-count" style="color:#f59e0b">6 artikelen</div>
+        <div class="cluster-meta">0 pillars · avg 1,060 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">Digitalisering</div>
+        <div class="cluster-count" style="color:#3b82f6">2 artikelen</div>
+        <div class="cluster-meta">0 pillars · avg 1,052 woorden</div>
+        
+      </div>
+      <div class="cluster-card cluster-thin">
+        <div class="cluster-name">Bruine Vloot</div>
+        <div class="cluster-count" style="color:#ef4444">1 artikel</div>
+        <div class="cluster-meta">0 pillars · avg 1,337 woorden</div>
+        <div class="cluster-warning">⚠️ Te dun — voeg artikelen toe</div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Row 4: Cannibalization + Weak Pages -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-title">Cannibalization (1 clusters)</div>
+      
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "chaos scheepsonderhoud"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Van Papieren Chaos naar Digitaal Gemak: Scheepsonderhoud in 5 Stappen</span>
+            <span class="cannibal-words">781 woorden</span>
+            <span class="cannibal-links">0 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Scheepsonderhoud Plannen: Van Chaos naar Overzicht</span>
+            <span class="cannibal-words">1,350 woorden</span>
+            <span class="cannibal-links">0 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Zwakke Pagina's (15)</div>
+      
+          <div class="weak-card">
+            <div class="weak-title">Van Papieren Chaos naar Digitaal Gemak: Scheepsonderhoud in 5 Stappen</div>
+            <div class="weak-meta">
+              <span class="weak-words">781 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">CvO Verlengen: Complete Checklist voor Scheepseigenaren</div>
+            <div class="weak-meta">
+              <span class="weak-words">789 woorden</span>
+              <span class="badge badge-gray">5 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Winteronderhoud: 20 Taken Die Je Dit Seizoen Niet Mag Vergeten</div>
+            <div class="weak-meta">
+              <span class="weak-words">832 woorden</span>
+              <span class="badge badge-gray">1 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Varend Monument Worden: Eisen, Procedure en Voordelen</div>
+            <div class="weak-meta">
+              <span class="weak-words">846 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">BvT Aanvragen: Alles over het Bewijs van Toelating</div>
+            <div class="weak-meta">
+              <span class="weak-words">848 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Voorjaarsklaarmaak-Checklist: Van Winterstalling naar Vaarseizoen</div>
+            <div class="weak-meta">
+              <span class="weak-words">862 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Houtrot Herkennen en Voorkomen op je Houten Schip</div>
+            <div class="weak-meta">
+              <span class="weak-words">888 woorden</span>
+              <span class="badge badge-gray">1 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Mast en Tuigage: Jaarlijks Inspectieprotocol</div>
+            <div class="weak-meta">
+              <span class="weak-words">907 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Tuigboek Bijhouden: Alles Wat Je Moet Weten als Schipper</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,214 woorden</span>
+              <span class="badge badge-gray">7 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Inspectie Voorbereiden: Zo Slaag Je Met Vlag en Wimpel</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,312 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Digitaal vs. Papieren Logboek: Waarom Schippers Overstappen</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,322 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Je Schip Winterklaar Maken: Checklist voor de Winterstalling</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,335 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Onderhoud van de Bruine Vloot: Tradities en Moderne Aanpak</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,337 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Scheepsonderhoud Plannen: Van Chaos naar Overzicht</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,350 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">CvO Certificaat Verlengen: Stap-voor-Stap Uitleg</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,352 woorden</span>
+              <span class="badge badge-gray">0 links</span>
+            </div>
+          </div>
+    </div>
+
+  </div>
+
+  <!-- Row 5: Freshness -->
+  <div class="card full-width">
+    <div class="card-title">Content Freshness — Verouderd (&gt;12 maanden)</div>
+    <div class="stale-empty">✓ Alle pagina's zijn recent bijgewerkt</div>
+  </div>
+
+  <!-- Row 6: Articles Table -->
+  <div class="card full-width">
+    <div class="card-title">Alle Artikelen (16)</div>
+    <div class="table-controls">
+      <input type="text" class="search-input" id="articleSearch" placeholder="Zoek artikel...">
+      <select class="filter-select" id="pillarFilter">
+        <option value="">Alle typen</option>
+        <option value="pillar">Alleen pillar</option>
+        <option value="regular">Alleen regulier</option>
+      </select>
+      <select class="filter-select" id="tldrFilter">
+        <option value="">Alle TL;DR</option>
+        <option value="yes">Met TL;DR</option>
+        <option value="no">Zonder TL;DR</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table id="articlesTable">
+        <thead>
+          <tr>
+            <th data-col="title">Artikel</th>
+            <th data-col="words" class="sorted-desc">Woorden</th>
+            <th data-col="tldr">TL;DR</th>
+            <th data-col="faq">FAQ</th>
+            <th data-col="pillar">Pillar</th>
+            <th data-col="takeaways">Takeaways</th>
+            <th data-col="links">Inbound ↓</th>
+            <th data-col="score">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+      <tr class="article-row" data-words="1214" data-links="7" data-score="35">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/tuigboek-bijhouden" target="_blank" class="article-link" title="Tuigboek Bijhouden: Alles Wat Je Moet Weten als Schipper">Tuigboek Bijhouden: Alles Wat Je Moet Weten als Schi…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,214</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">35</span></td>
+      </tr>
+      <tr class="article-row" data-words="789" data-links="5" data-score="30">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/cvo-checklist-verlengen" target="_blank" class="article-link" title="CvO Verlengen: Complete Checklist voor Scheepseigenaren">CvO Verlengen: Complete Checklist voor Scheepseigenaren</a></td>
+        <td class="td-center"><span class="badge badge-red">789</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">30</span></td>
+      </tr>
+      <tr class="article-row" data-words="848" data-links="2" data-score="20">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/bvt-bewijs-toelating" target="_blank" class="article-link" title="BvT Aanvragen: Alles over het Bewijs van Toelating">BvT Aanvragen: Alles over het Bewijs van Toelating</a></td>
+        <td class="td-center"><span class="badge badge-red">848</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">20</span></td>
+      </tr>
+      <tr class="article-row" data-words="888" data-links="1" data-score="10">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/houtrot-herkennen-voorkomen" target="_blank" class="article-link" title="Houtrot Herkennen en Voorkomen op je Houten Schip">Houtrot Herkennen en Voorkomen op je Houten Schip</a></td>
+        <td class="td-center"><span class="badge badge-red">888</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">1</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">10</span></td>
+      </tr>
+      <tr class="article-row" data-words="832" data-links="1" data-score="10">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/winteronderhoud-schip-checklist" target="_blank" class="article-link" title="Winteronderhoud: 20 Taken Die Je Dit Seizoen Niet Mag Vergeten">Winteronderhoud: 20 Taken Die Je Dit Seizoen Niet Ma…</a></td>
+        <td class="td-center"><span class="badge badge-red">832</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">1</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">10</span></td>
+      </tr>
+      <tr class="article-row" data-words="1490" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/onderhoud-historisch-schip" target="_blank" class="article-link" title="Onderhoud van een Historisch Schip: De Complete Gids">Onderhoud van een Historisch Schip: De Complete Gids</a></td>
+        <td class="td-center"><span class="badge badge-red">1,490</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1352" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/cvo-certificaat-verlengen" target="_blank" class="article-link" title="CvO Certificaat Verlengen: Stap-voor-Stap Uitleg">CvO Certificaat Verlengen: Stap-voor-Stap Uitleg</a></td>
+        <td class="td-center"><span class="badge badge-red">1,352</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1350" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/scheepsonderhoud-plannen" target="_blank" class="article-link" title="Scheepsonderhoud Plannen: Van Chaos naar Overzicht">Scheepsonderhoud Plannen: Van Chaos naar Overzicht</a></td>
+        <td class="td-center"><span class="badge badge-red">1,350</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1337" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/bruine-vloot-onderhoud" target="_blank" class="article-link" title="Onderhoud van de Bruine Vloot: Tradities en Moderne Aanpak">Onderhoud van de Bruine Vloot: Tradities en Moderne …</a></td>
+        <td class="td-center"><span class="badge badge-red">1,337</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1335" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/winterklaar-maken-schip" target="_blank" class="article-link" title="Je Schip Winterklaar Maken: Checklist voor de Winterstalling">Je Schip Winterklaar Maken: Checklist voor de Winter…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,335</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1322" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/digitaal-vs-papieren-logboek" target="_blank" class="article-link" title="Digitaal vs. Papieren Logboek: Waarom Schippers Overstappen">Digitaal vs. Papieren Logboek: Waarom Schippers Over…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,322</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="1312" data-links="0" data-score="15">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/inspectie-voorbereiden-schip" target="_blank" class="article-link" title="Inspectie Voorbereiden: Zo Slaag Je Met Vlag en Wimpel">Inspectie Voorbereiden: Zo Slaag Je Met Vlag en Wimpel</a></td>
+        <td class="td-center"><span class="badge badge-red">1,312</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">15</span></td>
+      </tr>
+      <tr class="article-row" data-words="907" data-links="0" data-score="10">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/mast-tuigage-inspectie" target="_blank" class="article-link" title="Mast en Tuigage: Jaarlijks Inspectieprotocol">Mast en Tuigage: Jaarlijks Inspectieprotocol</a></td>
+        <td class="td-center"><span class="badge badge-red">907</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">10</span></td>
+      </tr>
+      <tr class="article-row" data-words="862" data-links="0" data-score="10">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/voorjaar-vaarseizoen-checklist" target="_blank" class="article-link" title="Voorjaarsklaarmaak-Checklist: Van Winterstalling naar Vaarseizoen">Voorjaarsklaarmaak-Checklist: Van Winterstalling naa…</a></td>
+        <td class="td-center"><span class="badge badge-red">862</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">10</span></td>
+      </tr>
+      <tr class="article-row" data-words="846" data-links="0" data-score="25">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/varend-monument-worden" target="_blank" class="article-link" title="Varend Monument Worden: Eisen, Procedure en Voordelen">Varend Monument Worden: Eisen, Procedure en Voordelen</a></td>
+        <td class="td-center"><span class="badge badge-red">846</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">25</span></td>
+      </tr>
+      <tr class="article-row" data-words="781" data-links="0" data-score="10">
+        <td class="td-title"><a href="https://upkeeponline.nl/blog/papier-naar-digitaal-onderhoud" target="_blank" class="article-link" title="Van Papieren Chaos naar Digitaal Gemak: Scheepsonderhoud in 5 Stappen">Van Papieren Chaos naar Digitaal Gemak: Scheepsonder…</a></td>
+        <td class="td-center"><span class="badge badge-red">781</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">0</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">10</span></td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="tableCount">16 artikelen</div>
+  </div>
+
+  <!-- History placeholder -->
+  <div class="card full-width">
+    <div class="card-title">Audit Geschiedenis</div>
+    <p class="history-note">Historische scores worden bijgehouden zodra je meerdere audits hebt gedraaid. Sla dit HTML bestand op als <code>audit-2026-02-19.html</code> om trends te zien.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  SEO Audit Dashboard · Gegenereerd door OpenClaw SEO Audit Tool · 19 februari 2026
+</div>
+
+<script>
+// Table search & filter
+const searchInput = document.getElementById('articleSearch');
+const pillarFilter = document.getElementById('pillarFilter');
+const tldrFilter = document.getElementById('tldrFilter');
+const tbody = document.querySelector('#articlesTable tbody');
+const tableCount = document.getElementById('tableCount');
+const totalRows = 16;
+
+function filterTable() {
+  const q = searchInput.value.toLowerCase();
+  const pf = pillarFilter.value;
+  const tf = tldrFilter.value;
+  let visible = 0;
+  document.querySelectorAll('.article-row').forEach(row => {
+    const title = row.querySelector('.td-title').textContent.toLowerCase();
+    const isPillar = row.querySelector('.badge-blue') !== null;
+    const hasTldr = row.querySelectorAll('td')[2].querySelector('.badge-green') !== null;
+    let show = true;
+    if (q && !title.includes(q)) show = false;
+    if (pf === 'pillar' && !isPillar) show = false;
+    if (pf === 'regular' && isPillar) show = false;
+    if (tf === 'yes' && !hasTldr) show = false;
+    if (tf === 'no' && hasTldr) show = false;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  tableCount.textContent = visible === totalRows ? totalRows + ' artikelen' : visible + ' van ' + totalRows + ' artikelen';
+}
+
+searchInput.addEventListener('input', filterTable);
+pillarFilter.addEventListener('change', filterTable);
+tldrFilter.addEventListener('change', filterTable);
+
+// Table sorting
+let sortCol = 'links';
+let sortDir = -1;
+
+document.querySelectorAll('#articlesTable thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = -1; }
+    document.querySelectorAll('#articlesTable thead th').forEach(h => h.classList.remove('sorted-asc','sorted-desc'));
+    th.classList.add(sortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+    sortTable();
+  });
+});
+
+function sortTable() {
+  const rows = [...document.querySelectorAll('.article-row')];
+  rows.sort((a, b) => {
+    let va, vb;
+    switch(sortCol) {
+      case 'words': va = +a.dataset.words; vb = +b.dataset.words; break;
+      case 'links': va = +a.dataset.links; vb = +b.dataset.links; break;
+      case 'score': va = +a.dataset.score; vb = +b.dataset.score; break;
+      case 'title': va = a.querySelector('.td-title').textContent.trim(); vb = b.querySelector('.td-title').textContent.trim(); return sortDir * va.localeCompare(vb, 'nl');
+      case 'tldr': va = a.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; break;
+      case 'faq': va = a.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; break;
+      case 'pillar': va = a.querySelector('.badge-blue') ? 1 : 0; vb = b.querySelector('.badge-blue') ? 1 : 0; break;
+      case 'takeaways': va = a.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; vb = b.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; break;
+      default: return 0;
+    }
+    return sortDir * (va - vb);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+</body>
+</html>
