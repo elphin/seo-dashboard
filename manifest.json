@@ -1,7 +1,7 @@
 {
   "sites": [
     {
-      "slug": "blooom-nl",
+      "slug": "blooom",
       "name": "Blooom",
       "url": "https://blooom.nl",
       "latestScore": 82,
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "slug": "boldandbooked-nl",
+      "slug": "boldandbooked",
       "name": "Bold & Booked",
       "url": "https://boldandbooked.nl",
       "latestScore": 68,
@@ -31,7 +31,7 @@
       ]
     },
     {
-      "slug": "presskit-gg",
+      "slug": "presskit",
       "name": "presskit.gg",
       "url": "https://presskit.gg",
       "latestScore": 60,
