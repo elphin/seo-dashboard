@@ -14,6 +14,21 @@
           "grade": "Strong Site Authority"
         }
       ]
+    },
+    {
+      "slug": "boldandbooked-nl",
+      "name": "Bold & Booked",
+      "url": "https://boldandbooked.nl",
+      "latestScore": 68,
+      "dashboards": [
+        {
+          "file": "dashboard-2026-02-19-boldandbooked-nl.html",
+          "date": "2026-02-19",
+          "label": "19 februari 2026",
+          "score": 68,
+          "grade": "Good Foundation"
+        }
+      ]
     }
   ]
 }

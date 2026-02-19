@@ -7,75 +7,222 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
-  .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 32px; }
-  .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-  .header p { color: #94a3b8; font-size: 14px; }
-  .container { max-width: 900px; margin: 0 auto; padding: 32px; }
-  .site-group { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 24px; }
-  .site-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
-  .site-name { font-weight: 700; font-size: 16px; }
-  .site-url { font-size: 12px; color: #64748b; }
-  .dashboard-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #f8fafc; transition: background .1s; }
-  .dashboard-row:last-child { border-bottom: none; }
-  .dashboard-row:hover { background: #f8fafc; }
-  .dashboard-date { font-size: 13px; color: #334155; font-weight: 500; }
-  .dashboard-meta { display: flex; align-items: center; gap: 12px; }
+  .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header p { color: #94a3b8; font-size: 13px; margin-top: 2px; }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .site-group { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 20px; }
+  .site-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .site-info .site-name { font-weight: 700; font-size: 16px; }
+  .site-info .site-url { font-size: 12px; color: #64748b; margin-top: 1px; }
+  .site-actions { display: flex; align-items: center; gap: 10px; }
   .score-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
   .score-green { background: #dcfce7; color: #166534; }
   .score-yellow { background: #fef9c3; color: #854d0e; }
   .score-red { background: #fee2e2; color: #991b1b; }
-  .btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; background: #1e293b; color: white; }
-  .btn:hover { background: #334155; }
+  .score-gray { background: #f1f5f9; color: #64748b; }
+  .btn-audit { padding: 7px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #2563eb; color: white; transition: background .15s; display: flex; align-items: center; gap: 6px; }
+  .btn-audit:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-audit:disabled { background: #93c5fd; cursor: not-allowed; }
+  .btn-audit.running { background: #f59e0b; }
+  .dashboard-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 20px; border-bottom: 1px solid #f8fafc; }
+  .dashboard-row:last-child { border-bottom: none; }
+  .dashboard-row:hover { background: #f8fafc; }
+  .dashboard-date { font-size: 13px; color: #334155; font-weight: 500; }
+  .dashboard-meta { display: flex; align-items: center; gap: 10px; }
+  .btn-view { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; background: #1e293b; color: white; }
+  .btn-view:hover { background: #334155; }
+  .no-audits { font-size: 13px; color: #94a3b8; padding: 14px 20px; font-style: italic; }
+  .unavailable { font-size: 12px; color: #ef4444; }
+
+  /* Terminal log */
+  .audit-terminal { display: none; margin: 0; border-top: 1px solid #e2e8f0; background: #0f172a; }
+  .audit-terminal.visible { display: block; }
+  .terminal-header { padding: 8px 16px; background: #1e293b; display: flex; align-items: center; justify-content: space-between; }
+  .terminal-title { font-size: 11px; color: #64748b; font-family: monospace; }
+  .terminal-close { background: none; border: none; color: #64748b; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px; }
+  .terminal-close:hover { color: #94a3b8; }
+  .terminal-body { padding: 12px 16px; max-height: 220px; overflow-y: auto; font-family: 'SF Mono', 'Monaco', monospace; font-size: 12px; line-height: 1.6; }
+  .log-line { color: #94a3b8; }
+  .log-line.success { color: #4ade80; }
+  .log-line.error { color: #f87171; }
+  .log-line.info { color: #60a5fa; }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+
   .empty { color: #94a3b8; font-size: 13px; font-style: italic; padding: 20px; }
-  .footer { text-align: center; font-size: 12px; color: #94a3b8; padding: 24px; border-top: 1px solid #e2e8f0; margin-top: 24px; }
+  .footer { text-align: center; font-size: 12px; color: #94a3b8; padding: 24px; border-top: 1px solid #e2e8f0; margin-top: 8px; }
 </style>
 </head>
 <body>
+
 <div class="header">
-  <h1>SEO Audit Dashboards</h1>
-  <p>Overzicht van alle site audits — Elphinstone</p>
-</div>
-<div class="container">
-  <div id="dashboards-container">
-    <p class="empty">Laden...</p>
+  <div>
+    <h1>SEO Audit Dashboards</h1>
+    <p>Overzicht van alle site audits — Elphinstone</p>
   </div>
 </div>
-<div class="footer">SEO Audit Tool &middot; Elphinstone &middot; Automatisch gegenereerd na elke audit</div>
+
+<div class="container">
+  <div id="container"><p class="empty">Laden...</p></div>
+</div>
+
+<div class="footer">SEO Audit Tool &middot; Elphinstone</div>
+
 <script>
-fetch('manifest.json')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var container = document.getElementById('dashboards-container');
-    if (!data.sites || data.sites.length === 0) {
-      container.innerHTML = '<p class="empty">Nog geen dashboards. Voer eerst een audit uit.</p>';
-      return;
-    }
-    var html = '';
-    data.sites.forEach(function(site) {
-      var sc = site.latestScore >= 80 ? 'score-green' : site.latestScore >= 60 ? 'score-yellow' : 'score-red';
-      var rows = '';
-      site.dashboards.forEach(function(d) {
-        var dc = d.score >= 80 ? 'score-green' : d.score >= 60 ? 'score-yellow' : 'score-red';
-        rows += '<div class="dashboard-row">' +
+var sitesData = [];
+var manifestData = { sites: [] };
+
+function scoreClass(s) {
+  return s >= 80 ? 'score-green' : s >= 60 ? 'score-yellow' : s > 0 ? 'score-red' : 'score-gray';
+}
+
+function getManifestSite(slug) {
+  return manifestData.sites.find(function(s) { return s.slug === slug; });
+}
+
+function renderAll() {
+  var container = document.getElementById('container');
+  if (!sitesData.length) {
+    container.innerHTML = '<p class="empty">Geen sites geconfigureerd.</p>';
+    return;
+  }
+
+  var html = '';
+  sitesData.forEach(function(site) {
+    var ms = getManifestSite(site.slug);
+    var latestScore = ms ? ms.latestScore : 0;
+    var sc = scoreClass(latestScore);
+    var scoreLabel = latestScore > 0 ? latestScore + '/100' : 'Nog geen audit';
+
+    var dashboardRows = '';
+    if (ms && ms.dashboards && ms.dashboards.length) {
+      ms.dashboards.forEach(function(d) {
+        var dc = scoreClass(d.score);
+        dashboardRows += '<div class="dashboard-row">' +
           '<div class="dashboard-date">' + d.label + '</div>' +
           '<div class="dashboard-meta">' +
             '<span class="score-badge ' + dc + '">' + d.score + '/100</span>' +
-            '<a href="' + d.file + '" class="btn">Bekijken</a>' +
+            '<a href="' + d.file + '" class="btn-view" target="_blank">Bekijken</a>' +
           '</div>' +
         '</div>';
       });
-      html += '<div class="site-group">' +
-        '<div class="site-header">' +
-          '<div><div class="site-name">' + site.name + '</div><div class="site-url">' + site.url + '</div></div>' +
-          '<span class="score-badge ' + sc + '">' + site.latestScore + '/100</span>' +
+    } else {
+      dashboardRows = '<div class="no-audits">Nog geen audits uitgevoerd voor deze site.</div>';
+    }
+
+    var auditBtn = '';
+    if (site.available) {
+      var isRunning = site.running;
+      auditBtn = '<button class="btn-audit' + (isRunning ? ' running' : '') + '" ' +
+        (isRunning ? 'disabled' : '') +
+        ' onclick="startAudit(\'' + site.slug + '\')" id="btn-' + site.slug + '">' +
+        (isRunning ? '<div class="spinner"></div> Bezig...' : '&#9654; Audit starten') +
+        '</button>';
+    } else {
+      auditBtn = '<span class="unavailable">Geen content</span>';
+    }
+
+    html += '<div class="site-group" id="site-' + site.slug + '">' +
+      '<div class="site-header">' +
+        '<div class="site-info">' +
+          '<div class="site-name">' + site.name + '</div>' +
+          '<div class="site-url">' + site.url + '</div>' +
         '</div>' +
-        rows +
-      '</div>';
-    });
-    container.innerHTML = html;
-  })
+        '<div class="site-actions">' +
+          '<span class="score-badge ' + sc + '">' + scoreLabel + '</span>' +
+          auditBtn +
+        '</div>' +
+      '</div>' +
+      dashboardRows +
+      '<div class="audit-terminal" id="term-' + site.slug + '">' +
+        '<div class="terminal-header">' +
+          '<span class="terminal-title">&#9654; audit log — ' + site.name + '</span>' +
+          '<button class="terminal-close" onclick="closeTerminal(\'' + site.slug + '\')">&#215;</button>' +
+        '</div>' +
+        '<div class="terminal-body" id="log-' + site.slug + '"></div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function closeTerminal(slug) {
+  var term = document.getElementById('term-' + slug);
+  if (term) term.classList.remove('visible');
+}
+
+function startAudit(slug) {
+  var site = sitesData.find(function(s) { return s.slug === slug; });
+  if (!site || !site.available) return;
+
+  var btn = document.getElementById('btn-' + slug);
+  var term = document.getElementById('term-' + slug);
+  var log = document.getElementById('log-' + slug);
+
+  if (btn) { btn.disabled = true; btn.classList.add('running'); btn.innerHTML = '<div class="spinner"></div> Bezig...'; }
+  if (term) term.classList.add('visible');
+  if (log) log.innerHTML = '';
+
+  var es = new EventSource('/api/audit/' + slug);
+
+  es.onmessage = function(e) {
+    var msg = JSON.parse(e.data);
+    if (!log) return;
+
+    var line = document.createElement('div');
+    line.className = 'log-line';
+    if (msg.type === 'done') line.className += ' success';
+    else if (msg.type === 'error') line.className += ' error';
+    else if (msg.type === 'start') line.className += ' info';
+    line.textContent = msg.data;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+
+    if (msg.type === 'done' || msg.type === 'error') {
+      es.close();
+      if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
+      // Reload manifest to show new dashboard
+      loadManifest(true);
+    }
+  };
+
+  es.onerror = function() {
+    es.close();
+    if (btn) { btn.disabled = false; btn.classList.remove('running'); btn.innerHTML = '&#9654; Audit starten'; }
+    if (log) {
+      var line = document.createElement('div');
+      line.className = 'log-line error';
+      line.textContent = 'Verbinding verbroken.';
+      log.appendChild(line);
+    }
+  };
+}
+
+function loadSites() {
+  return fetch('/api/sites')
+    .then(function(r) { return r.json(); })
+    .then(function(data) { sitesData = data; });
+}
+
+function loadManifest(rerender) {
+  return fetch('manifest.json?t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      manifestData = data;
+      if (rerender) renderAll();
+    })
+    .catch(function() { manifestData = { sites: [] }; });
+}
+
+// Initial load
+Promise.all([loadSites(), loadManifest(false)])
+  .then(function() { renderAll(); })
   .catch(function(e) {
-    document.getElementById('dashboards-container').innerHTML =
+    document.getElementById('container').innerHTML =
       '<p class="empty">Fout bij laden: ' + e.message + '</p>';
   });
 </script>

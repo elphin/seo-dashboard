@@ -1,0 +1,38 @@
+[
+  {
+    "slug": "blooom",
+    "name": "Blooom",
+    "url": "https://blooom.nl",
+    "contentDir": "/home/ubuntu/.openclaw/workspace-main/projects/blooom/blooom-marketing/src/content/blog"
+  },
+  {
+    "slug": "boldandbooked",
+    "name": "Bold & Booked",
+    "url": "https://boldandbooked.nl",
+    "contentDir": "/home/ubuntu/.openclaw/workspace-main/projects/boldandbooked/boldandbooked-marketing/src/content/blog"
+  },
+  {
+    "slug": "upkeep",
+    "name": "UpKeep Online",
+    "url": "https://upkeeponline.nl",
+    "contentDir": "/home/ubuntu/.openclaw/workspace-main/projects/upkeep/upkeep-site/content/blog"
+  },
+  {
+    "slug": "elphinstone",
+    "name": "Elphinstone",
+    "url": "https://elphinstone.nl",
+    "contentDir": "/home/ubuntu/.openclaw/workspace-main/projects/elphinstone-site/content/blog"
+  },
+  {
+    "slug": "presskit",
+    "name": "presskit.gg",
+    "url": "https://presskit.gg",
+    "contentDir": "/home/ubuntu/.openclaw/workspace-main/projects/presskit-gg/website/content"
+  },
+  {
+    "slug": "dookins",
+    "name": "Dookins",
+    "url": "https://dookins.com",
+    "contentDir": null
+  }
+]
