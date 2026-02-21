@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Audit Dashboard — https://presskit.gg</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .header-left h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .header-left p { font-size: 13px; color: #94a3b8; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  /* Layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+  .full-width { margin-bottom: 24px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #e2e8f0; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: 16px; }
+
+  /* Score gauge */
+  .score-card { display: flex; flex-direction: column; align-items: center; }
+  .score-gauge { margin-bottom: 8px; }
+  .score-grade { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .score-sub { font-size: 12px; color: #94a3b8; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-item { text-align: center; padding: 12px 8px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .stat-value { font-size: 24px; font-weight: 700; color: #1e293b; }
+  .stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* E-E-A-T */
+  .eeat-score { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+  .eeat-list { list-style: none; }
+  .eeat-list li { font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f1f5f9; }
+  .eeat-list li:last-child { border-bottom: none; }
+  .eeat-signal { color: #22c55e; }
+  .eeat-issue { color: #f59e0b; }
+
+  /* Cluster grid */
+  .clusters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .cluster-card { background: #f8fafc; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0; }
+  .cluster-card.cluster-thin { border-color: #fbbf24; background: #fffbeb; }
+  .cluster-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155; }
+  .cluster-count { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+  .cluster-meta { font-size: 11px; color: #94a3b8; }
+  .cluster-warning { font-size: 11px; color: #b45309; margin-top: 6px; }
+  .uncategorized-note { font-size: 13px; color: #64748b; margin-top: 12px; padding: 8px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+
+  /* Cannibalization */
+  .cannibal-card { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .cannibal-keyword { font-size: 14px; font-weight: 600; color: #c2410c; margin-bottom: 10px; }
+  .cannibal-pages { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .cannibal-page { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 6px 10px; background: white; border-radius: 6px; }
+  .cannibal-title { flex: 1; font-weight: 500; }
+  .cannibal-words, .cannibal-links { color: #64748b; font-size: 12px; white-space: nowrap; }
+  .cannibal-tip { font-size: 12px; color: #78716c; font-style: italic; }
+  .no-issues { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* Images */
+  .image-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .image-row:last-child { border-bottom: none; }
+  .image-label { font-size: 13px; color: #334155; }
+  .image-score-bar { display: flex; align-items: center; gap: 10px; }
+  .progress-bar { width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-gray { background: #f1f5f9; color: #64748b; }
+
+  /* Articles table */
+  .table-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-input { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; width: 240px; background: #f8fafc; outline: none; }
+  .search-input:focus { border-color: #3b82f6; background: white; }
+  .filter-select { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; background: #f8fafc; cursor: pointer; outline: none; }
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: #f8fafc; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { background: #f1f5f9; }
+  thead th.sorted-asc::after { content: ' ↑'; color: #3b82f6; }
+  thead th.sorted-desc::after { content: ' ↓'; color: #3b82f6; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
+  tbody tr:hover { background: #f8fafc; }
+  td { padding: 8px 12px; vertical-align: middle; }
+  .td-center { text-align: center; }
+  .td-title { max-width: 320px; }
+  .article-link { color: #1e293b; font-weight: 500; }
+  .article-link:hover { color: #3b82f6; }
+  .inbound-count { font-weight: 600; color: #334155; }
+  .article-score { font-weight: 700; font-size: 14px; }
+  .table-footer { font-size: 12px; color: #94a3b8; margin-top: 8px; text-align: right; }
+
+  /* Stale pages */
+  .stale-empty { font-size: 13px; color: #22c55e; padding: 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; }
+
+  /* History */
+  .history-note { font-size: 13px; color: #64748b; }
+  .history-note code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+
+  /* Footer */
+  .footer { text-align: center; font-size: 12px; color: #94a3b8; padding: 24px; border-top: 1px solid #e2e8f0; margin-top: 24px; }
+
+  /* Weak pages */
+  .weak-card { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .weak-title { font-size: 13px; font-weight: 500; color: #1e293b; }
+  .weak-meta { display: flex; gap: 8px; align-items: center; }
+  .weak-words { font-size: 12px; color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>SEO Audit Dashboard</h1>
+    <p>https://presskit.gg &nbsp;·&nbsp; 21 februari 2026</p>
+  </div>
+  <div class="header-right">
+    
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="5.026548245743673"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#22c55e">98</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Row 1: Score + Stats + E-E-A-T -->
+  <div class="grid-3">
+
+    <div class="card score-card">
+      <div class="card-title">Algemene Score</div>
+      <div class="score-gauge">
+    <svg viewBox="0 0 200 110" width="200" height="110" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16"
+        stroke-linecap="round"
+        stroke-dasharray="251.32741228718345"
+        stroke-dashoffset="5.026548245743673"
+        style="transform-origin: center; transform: rotate(0deg)"/>
+      <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="700" fill="#22c55e">98</text>
+      <text x="100" y="108" text-anchor="middle" font-size="11" fill="#6b7280">/100</text>
+    </svg></div>
+      <div class="score-grade" style="color:#22c55e">Strong Site Authority</div>
+      <div class="score-sub">Gegenereerd op 21 februari 2026</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Statistieken</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">61</div>
+          <div class="stat-label">Pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">55</div>
+          <div class="stat-label">Pillar artikelen</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">2,877</div>
+          <div class="stat-label">Gem. woorden</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">56</div>
+          <div class="stat-label">Met TL;DR</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#22c55e">0</div>
+          <div class="stat-label">Orphan pages</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">5</div>
+          <div class="stat-label">Zwakke pagina's</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" style="color:#f59e0b">15</div>
+          <div class="stat-label">Cannibalization</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">8</div>
+          <div class="stat-label">Topical clusters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">E-E-A-T Signalen</div>
+      <div class="eeat-score" style="color:#22c55e">100/100</div>
+      <ul class="eeat-list">
+        <li class="eeat-signal">✓ Over/About pagina aanwezig</li><li class="eeat-signal">✓ Auteursveld aanwezig op 100% van pagina's</li><li class="eeat-signal">✓ First-hand experience goed vertegenwoordigd</li><li class="eeat-signal">✓ FAQ aanwezig op 56 pagina's</li>
+        
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- SERP Rankings -->
+  
+  <div class="card full-width">
+    <div class="card-title">📊 Search Rankings (Google Search Console)</div>
+    <div class="serp-period" style="font-size:12px;color:#64748b;margin-bottom:16px">2026-01-22 to 2026-02-19</div>
+    
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-item">
+        <div class="stat-value">48</div>
+        <div class="stat-label">Keywords</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">218</div>
+        <div class="stat-label">Impressions</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Clicks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" style="color:#f59e0b">15.2</div>
+        <div class="stat-label">Avg Position</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" style="color:#f59e0b">3.2%</div>
+        <div class="stat-label">Avg CTR</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" style="color:#22c55e">31</div>
+        <div class="stat-label">Top 10</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" style="color:#3b82f6">7</div>
+        <div class="stat-label">11-20</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" style="color:#64748b">10</div>
+        <div class="stat-label">20+</div>
+      </div>
+    </div>
+
+    <div class="card-title" style="font-size:14px;margin:20px 0 12px">Top Keywords</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Keyword</th>
+          <th class="td-center">Position</th>
+          <th class="td-center">Impressions</th>
+          <th class="td-center">Clicks</th>
+          <th class="td-center">CTR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr>
+            <td>presskit</td>
+            <td class="td-center" style="color:#22c55e">8.6</td>
+            <td class="td-center">57</td>
+            <td class="td-center">5</td>
+            <td class="td-center">880.0%</td>
+          </tr>
+        
+          <tr>
+            <td>press kitty</td>
+            <td class="td-center" style="color:#22c55e">3.9</td>
+            <td class="td-center">24</td>
+            <td class="td-center">1</td>
+            <td class="td-center">420.0%</td>
+          </tr>
+        
+          <tr>
+            <td>presskit()</td>
+            <td class="td-center" style="color:#22c55e">6.1</td>
+            <td class="td-center">10</td>
+            <td class="td-center">1</td>
+            <td class="td-center">1000.0%</td>
+          </tr>
+        
+          <tr>
+            <td>best tools for marketing an indie game on a small budget</td>
+            <td class="td-center" style="color:#3b82f6">12.5</td>
+            <td class="td-center">2</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>dopresskit</td>
+            <td class="td-center" style="color:#22c55e">4.7</td>
+            <td class="td-center">6</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>how to see wishlists on steamworks</td>
+            <td class="td-center" style="color:#22c55e">9.0</td>
+            <td class="td-center">1</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>indie game press</td>
+            <td class="td-center" style="color:#22c55e">5.0</td>
+            <td class="td-center">1</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>press kit game</td>
+            <td class="td-center" style="color:#64748b">30.5</td>
+            <td class="td-center">2</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>press kit games</td>
+            <td class="td-center" style="color:#64748b">31.0</td>
+            <td class="td-center">2</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+          <tr>
+            <td>press kit video game</td>
+            <td class="td-center" style="color:#64748b">42.0</td>
+            <td class="td-center">1</td>
+            <td class="td-center">0</td>
+            <td class="td-center">0.0%</td>
+          </tr>
+        
+      </tbody>
+    </table>
+
+    <div class="serp-insight" style="margin-top:16px;padding:12px;background:#fef3c7;border-left:3px solid #f59e0b;font-size:13px">⚠️ <strong>Average position (15.2) is outside top 10</strong> — Focus on improving top-performing keywords</div>
+    
+    
+  </div>
+  
+
+  <!-- Row 2: Images -->
+  <div class="card full-width">
+    <div class="card-title">Afbeeldingen Audit</div>
+    <div class="image-row">
+      <div class="image-label">Featured images (61/61)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#22c55e">100%</span>
+      </div>
+    </div>
+    <div class="image-row">
+      <div class="image-label">Inline afbeeldingen (3+ per artikel)</div>
+      <div class="image-score-bar">
+        <div class="progress-bar"><div class="progress-fill" style="width:15%;background:#ef4444"></div></div>
+        <span style="font-size:13px;font-weight:600;color:#ef4444">15%</span>
+      </div>
+    </div>
+    
+    
+    <div style="margin-top:12px">
+      <strong style="font-size:13px;color:#b45309">Te weinig inline afbeeldingen (52):</strong>
+      <ul style="margin-top:6px;font-size:12px;color:#64748b;list-style:disc;padding-left:20px">
+        <li>GIFs for Game Marketing</li><li>When to Create Your Press Kit</li><li>Analyzing Steam Next Fest Results</li><li>Press Kitty vs presskit.gg: An Honest Comparison</li><li>Social Media Branding for Indie Game Developers</li><li>Steam Capsule Art Guide [2026]</li><li>Press Kitty vs presskit.gg: Which Press Kit Tool Is Right for You?</li><li>Google Drive vs Dedicated Press Kits</li><li>How Steam Wishlists Work</li><li>How to Take Better Screenshots of Your Indie Game</li>
+        <li>... en 42 meer</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Row 3: Topical Clusters -->
+  <div class="card full-width">
+    <div class="card-title">Topical Authority Clusters</div>
+    <div class="clusters-grid">
+      
+      <div class="cluster-card ">
+        <div class="cluster-name">press-kits</div>
+        <div class="cluster-count" style="color:#22c55e">18 artikelen</div>
+        <div class="cluster-meta">15 pillars · avg 2,580 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">marketing-strategy</div>
+        <div class="cluster-count" style="color:#22c55e">8 artikelen</div>
+        <div class="cluster-meta">7 pillars · avg 2,906 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">steam-marketing</div>
+        <div class="cluster-count" style="color:#22c55e">8 artikelen</div>
+        <div class="cluster-meta">8 pillars · avg 2,870 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">next-fest</div>
+        <div class="cluster-count" style="color:#f59e0b">6 artikelen</div>
+        <div class="cluster-meta">5 pillars · avg 2,875 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">wishlists-launch</div>
+        <div class="cluster-count" style="color:#f59e0b">6 artikelen</div>
+        <div class="cluster-meta">5 pillars · avg 2,671 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">trailers-visuals</div>
+        <div class="cluster-count" style="color:#f59e0b">5 artikelen</div>
+        <div class="cluster-meta">5 pillars · avg 4,019 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">press-outreach</div>
+        <div class="cluster-count" style="color:#f59e0b">5 artikelen</div>
+        <div class="cluster-meta">5 pillars · avg 2,887 woorden</div>
+        
+      </div>
+      <div class="cluster-card ">
+        <div class="cluster-name">branding</div>
+        <div class="cluster-count" style="color:#f59e0b">4 artikelen</div>
+        <div class="cluster-meta">4 pillars · avg 3,099 woorden</div>
+        
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Row 4: Cannibalization + Weak Pages -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-title">Cannibalization (10 clusters)</div>
+      
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "presskit dead"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">presskit() Is Dead — Here Are the Best Modern Alternatives [2026]</span>
+            <span class="cannibal-words">2,993 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">presskit() Is Dead</span>
+            <span class="cannibal-words">2,486 woorden</span>
+            <span class="cannibal-links">7 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "steam next fest"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Analyzing Steam Next Fest Results</span>
+            <span class="cannibal-words">2,805 woorden</span>
+            <span class="cannibal-links">9 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Steam Next Fest Scheduling Guide</span>
+            <span class="cannibal-words">2,960 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Your Press Kit Checklist for Steam Next Fest</span>
+            <span class="cannibal-words">2,658 woorden</span>
+            <span class="cannibal-links">4 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Steam Next Fest Complete Guide [2026]</span>
+            <span class="cannibal-words">5,033 woorden</span>
+            <span class="cannibal-links">11 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Steam Next Fest 2026: What Actually Worked (And What Didn't)</span>
+            <span class="cannibal-words">1,254 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "press kits"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Do Journalists Use Press Kits?</span>
+            <span class="cannibal-words">2,386 woorden</span>
+            <span class="cannibal-links">4 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Google Drive vs Dedicated Press Kits</span>
+            <span class="cannibal-words">2,586 woorden</span>
+            <span class="cannibal-links">8 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Notion Press Kits: Quick Setup, Hidden Costs</span>
+            <span class="cannibal-words">2,594 woorden</span>
+            <span class="cannibal-links">7 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">The Complete Guide to Indie Game Press Kits [2026]</span>
+            <span class="cannibal-words">4,398 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "game budget"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Game Key Art on a Budget: Tools and Techniques</span>
+            <span class="cannibal-words">3,274 woorden</span>
+            <span class="cannibal-links">5 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Indie Game Marketing on a Zero Budget</span>
+            <span class="cannibal-words">2,291 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "game marketing"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">GIFs for Game Marketing</span>
+            <span class="cannibal-words">3,436 woorden</span>
+            <span class="cannibal-links">11 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Indie Game Marketing Timeline</span>
+            <span class="cannibal-words">4,945 woorden</span>
+            <span class="cannibal-links">14 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "game screenshots"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Game Trailers and Screenshots Guide</span>
+            <span class="cannibal-words">6,381 woorden</span>
+            <span class="cannibal-links">13 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">How to Take Better Screenshots of Your Indie Game</span>
+            <span class="cannibal-words">3,108 woorden</span>
+            <span class="cannibal-links">8 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "steam wishlists"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">How Steam Wishlists Work</span>
+            <span class="cannibal-words">2,614 woorden</span>
+            <span class="cannibal-links">8 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Steam Followers vs. Wishlists Explained</span>
+            <span class="cannibal-words">2,246 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "indie game"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">How to Announce Your Indie Game (Without Messing</span>
+            <span class="cannibal-words">2,104 woorden</span>
+            <span class="cannibal-links">7 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Indie Game Pre-Launch Checklist</span>
+            <span class="cannibal-words">2,268 woorden</span>
+            <span class="cannibal-links">7 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "press indie game"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">How to Get Press Coverage for Your Indie Game</span>
+            <span class="cannibal-words">4,625 woorden</span>
+            <span class="cannibal-links">18 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">When to Create Your Press Kit: A Timeline for Indie Game Devs</span>
+            <span class="cannibal-words">1,311 woorden</span>
+            <span class="cannibal-links">2 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    <div class="cannibal-card">
+      <div class="cannibal-keyword">⚠️ "presskit presskit"</div>
+      <div class="cannibal-pages">
+        
+          <div class="cannibal-page">
+            <span class="cannibal-title">Migrate from presskit() to presskit.gg</span>
+            <span class="cannibal-words">2,550 woorden</span>
+            <span class="cannibal-links">4 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Press Kitty vs presskit.gg: An Honest Comparison</span>
+            <span class="cannibal-words">2,605 woorden</span>
+            <span class="cannibal-links">9 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">Press Kitty vs presskit.gg: Which Press Kit Tool Is Right for You?</span>
+            <span class="cannibal-words">2,629 woorden</span>
+            <span class="cannibal-links">9 inbound links</span>
+          </div>
+          <div class="cannibal-page">
+            <span class="cannibal-title">presskit.gg vs Notion for Your Game Press Kit: A Practical Comparison</span>
+            <span class="cannibal-words">1,181 woorden</span>
+            <span class="cannibal-links">3 inbound links</span>
+          </div>
+      </div>
+      <div class="cannibal-tip">💡 Tip: Fuseer of differentieer — één pagina als canonical, andere redirecten of anders positioneren.</div>
+    </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Zwakke Pagina's (5)</div>
+      
+          <div class="weak-card">
+            <div class="weak-title">Your Game Launch Week Checklist: 47 Things to Do Before, During, and After</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,170 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">presskit.gg vs Notion for Your Game Press Kit: A Practical Comparison</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,181 woorden</span>
+              <span class="badge badge-gray">3 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">Steam Next Fest 2026: What Actually Worked (And What Didn't)</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,254 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">5 Marketing Mistakes Indie Devs Make (And How to Fix Them)</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,304 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+          <div class="weak-card">
+            <div class="weak-title">When to Create Your Press Kit: A Timeline for Indie Game Devs</div>
+            <div class="weak-meta">
+              <span class="weak-words">1,311 woorden</span>
+              <span class="badge badge-gray">2 links</span>
+            </div>
+          </div>
+    </div>
+
+  </div>
+
+  <!-- Row 5: Freshness -->
+  <div class="card full-width">
+    <div class="card-title">Content Freshness — Verouderd (&gt;12 maanden)</div>
+    <div class="stale-empty">✓ Alle pagina's zijn recent bijgewerkt</div>
+  </div>
+
+  <!-- Row 6: Articles Table -->
+  <div class="card full-width">
+    <div class="card-title">Alle Artikelen (61)</div>
+    <div class="table-controls">
+      <input type="text" class="search-input" id="articleSearch" placeholder="Zoek artikel...">
+      <select class="filter-select" id="pillarFilter">
+        <option value="">Alle typen</option>
+        <option value="pillar">Alleen pillar</option>
+        <option value="regular">Alleen regulier</option>
+      </select>
+      <select class="filter-select" id="tldrFilter">
+        <option value="">Alle TL;DR</option>
+        <option value="yes">Met TL;DR</option>
+        <option value="no">Zonder TL;DR</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table id="articlesTable">
+        <thead>
+          <tr>
+            <th data-col="title">Artikel</th>
+            <th data-col="words" class="sorted-desc">Woorden</th>
+            <th data-col="tldr">TL;DR</th>
+            <th data-col="faq">FAQ</th>
+            <th data-col="pillar">Pillar</th>
+            <th data-col="takeaways">Takeaways</th>
+            <th data-col="links">Inbound ↓</th>
+            <th data-col="score">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+      <tr class="article-row" data-words="4625" data-links="18" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-get-press-coverage-indie-game" target="_blank" class="article-link" title="How to Get Press Coverage for Your Indie Game">How to Get Press Coverage for Your Indie Game</a></td>
+        <td class="td-center"><span class="badge badge-green">4,625</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">18</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="4945" data-links="14" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-marketing-timeline" target="_blank" class="article-link" title="Indie Game Marketing Timeline">Indie Game Marketing Timeline</a></td>
+        <td class="td-center"><span class="badge badge-green">4,945</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">14</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="6381" data-links="13" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-trailers-screenshots-guide" target="_blank" class="article-link" title="Game Trailers and Screenshots Guide">Game Trailers and Screenshots Guide</a></td>
+        <td class="td-center"><span class="badge badge-green">6,381</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">13</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="5137" data-links="13" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-build-steam-wishlist" target="_blank" class="article-link" title="How to Build a Steam Wishlist Before Your Game">How to Build a Steam Wishlist Before Your Game</a></td>
+        <td class="td-center"><span class="badge badge-green">5,137</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">13</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="5048" data-links="13" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-page-optimization-guide" target="_blank" class="article-link" title="Steam Page Optimization Guide [2026]">Steam Page Optimization Guide [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">5,048</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">13</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="5033" data-links="11" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-next-fest-guide" target="_blank" class="article-link" title="Steam Next Fest Complete Guide [2026]">Steam Next Fest Complete Guide [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">5,033</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="4560" data-links="11" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-marketing-tools-comparison" target="_blank" class="article-link" title="Self-Hosted vs Hosted Marketing Tools">Self-Hosted vs Hosted Marketing Tools</a></td>
+        <td class="td-center"><span class="badge badge-green">4,560</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="3436" data-links="11" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-marketing-gifs-guide" target="_blank" class="article-link" title="GIFs for Game Marketing">GIFs for Game Marketing</a></td>
+        <td class="td-center"><span class="badge badge-green">3,436</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="1918" data-links="11" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/when-to-create-press-kit" target="_blank" class="article-link" title="When to Create Your Press Kit">When to Create Your Press Kit</a></td>
+        <td class="td-center"><span class="badge badge-yellow">1,918</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">11</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="4806" data-links="10" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-branding-guide" target="_blank" class="article-link" title="Building an Indie Game Brand from Scratch">Building an Indie Game Brand from Scratch</a></td>
+        <td class="td-center"><span class="badge badge-green">4,806</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">10</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2805" data-links="9" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/analyzing-next-fest-results" target="_blank" class="article-link" title="Analyzing Steam Next Fest Results">Analyzing Steam Next Fest Results</a></td>
+        <td class="td-center"><span class="badge badge-green">2,805</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2755" data-links="9" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-capsule-art-guide" target="_blank" class="article-link" title="Steam Capsule Art Guide [2026]">Steam Capsule Art Guide [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">2,755</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2629" data-links="9" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kitty-vs-presskit-gg" target="_blank" class="article-link" title="Press Kitty vs presskit.gg: Which Press Kit Tool Is Right for You?">Press Kitty vs presskit.gg: Which Press Kit Tool Is …</a></td>
+        <td class="td-center"><span class="badge badge-green">2,629</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2605" data-links="9" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kitty-vs-presskit-gg" target="_blank" class="article-link" title="Press Kitty vs presskit.gg: An Honest Comparison">Press Kitty vs presskit.gg: An Honest Comparison</a></td>
+        <td class="td-center"><span class="badge badge-green">2,605</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2068" data-links="9" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/social-media-branding-indie-game" target="_blank" class="article-link" title="Social Media Branding for Indie Game Developers">Social Media Branding for Indie Game Developers</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,068</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">9</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="3108" data-links="8" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-take-game-screenshots" target="_blank" class="article-link" title="How to Take Better Screenshots of Your Indie Game">How to Take Better Screenshots of Your Indie Game</a></td>
+        <td class="td-center"><span class="badge badge-green">3,108</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2614" data-links="8" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-steam-wishlists-work" target="_blank" class="article-link" title="How Steam Wishlists Work">How Steam Wishlists Work</a></td>
+        <td class="td-center"><span class="badge badge-green">2,614</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2586" data-links="8" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/google-drive-press-kit-vs-website" target="_blank" class="article-link" title="Google Drive vs Dedicated Press Kits">Google Drive vs Dedicated Press Kits</a></td>
+        <td class="td-center"><span class="badge badge-green">2,586</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2572" data-links="8" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-write-press-email-indie-game" target="_blank" class="article-link" title="How to Write a Press Email That Gets Opened">How to Write a Press Email That Gets Opened</a></td>
+        <td class="td-center"><span class="badge badge-green">2,572</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2537" data-links="8" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/next-fest-content-creator-outreach" target="_blank" class="article-link" title="Next Fest Creator Outreach Guide">Next Fest Creator Outreach Guide</a></td>
+        <td class="td-center"><span class="badge badge-green">2,537</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">8</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2610" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/build-game-press-list-free" target="_blank" class="article-link" title="Build a Game Press List Free">Build a Game Press List Free</a></td>
+        <td class="td-center"><span class="badge badge-green">2,610</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2604" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kit-vs-press-release" target="_blank" class="article-link" title="Press Kit vs Press Release">Press Kit vs Press Release</a></td>
+        <td class="td-center"><span class="badge badge-green">2,604</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2594" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/notion-press-kit-template" target="_blank" class="article-link" title="Notion Press Kits: Quick Setup, Hidden Costs">Notion Press Kits: Quick Setup, Hidden Costs</a></td>
+        <td class="td-center"><span class="badge badge-green">2,594</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2486" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/presskit-is-dead-alternatives" target="_blank" class="article-link" title="presskit() Is Dead">presskit() Is Dead</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,486</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2268" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-launch-checklist" target="_blank" class="article-link" title="Indie Game Pre-Launch Checklist">Indie Game Pre-Launch Checklist</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,268</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2104" data-links="7" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-announce-indie-game" target="_blank" class="article-link" title="How to Announce Your Indie Game (Without Messing">How to Announce Your Indie Game (Without Messing</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,104</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">7</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2876" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-build-game-demo" target="_blank" class="article-link" title="How to Build a Demo That Sells Your Game">How to Build a Demo That Sells Your Game</a></td>
+        <td class="td-center"><span class="badge badge-green">2,876</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2623" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/reddit-marketing-indie-games" target="_blank" class="article-link" title="Reddit Marketing for Indie Games">Reddit Marketing for Indie Games</a></td>
+        <td class="td-center"><span class="badge badge-green">2,623</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2596" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-many-wishlists-to-launch" target="_blank" class="article-link" title="How Many Wishlists Do You Need to Launch">How Many Wishlists Do You Need to Launch</a></td>
+        <td class="td-center"><span class="badge badge-green">2,596</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2578" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-description-guide" target="_blank" class="article-link" title="How to Write a Steam Description That Converts">How to Write a Steam Description That Converts</a></td>
+        <td class="td-center"><span class="badge badge-green">2,578</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2495" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kit-drive-wishlists" target="_blank" class="article-link" title="Using Your Press Kit to Drive Wishlists">Using Your Press Kit to Drive Wishlists</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,495</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2241" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/post-launch-marketing-indie-game" target="_blank" class="article-link" title="Post-Launch Marketing for Indie Games">Post-Launch Marketing for Indie Games</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,241</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2119" data-links="6" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/writing-game-studio-descriptions" target="_blank" class="article-link" title="Writing Studio and Game Descriptions">Writing Studio and Game Descriptions</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,119</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">6</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="3520" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-trailer-editing-guide" target="_blank" class="article-link" title="Game Trailer Editing">Game Trailer Editing</a></td>
+        <td class="td-center"><span class="badge badge-green">3,520</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="3274" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-key-art-budget" target="_blank" class="article-link" title="Game Key Art on a Budget: Tools and Techniques">Game Key Art on a Budget: Tools and Techniques</a></td>
+        <td class="td-center"><span class="badge badge-green">3,274</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2661" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-tags-strategy" target="_blank" class="article-link" title="Steam Tags Strategy Guide">Steam Tags Strategy Guide</a></td>
+        <td class="td-center"><span class="badge badge-green">2,661</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2573" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/managing-game-key-requests" target="_blank" class="article-link" title="Managing Game Key Requests Like a Professional">Managing Game Key Requests Like a Professional</a></td>
+        <td class="td-center"><span class="badge badge-green">2,573</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2293" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/developer-website-guide" target="_blank" class="article-link" title="Developer Website Guide for Press">Developer Website Guide for Press</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,293</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="2246" data-links="5" data-score="100">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-logo-design-guide" target="_blank" class="article-link" title="Game Logo Design for Non-Designers">Game Logo Design for Non-Designers</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,246</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">5</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">100</span></td>
+      </tr>
+      <tr class="article-row" data-words="3663" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/best-press-kit-tools-indie-games" target="_blank" class="article-link" title="Best Press Kit Tools for Indie Games: Complete Comparison [2026]">Best Press Kit Tools for Indie Games: Complete Compa…</a></td>
+        <td class="td-center"><span class="badge badge-green">3,663</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="3389" data-links="4" data-score="80">
+        <td class="td-title"><a href="https://presskit.gg/blog/how-to-create-press-kit-game" target="_blank" class="article-link" title="How to Create a Press Kit for Your Game in 30 Minutes">How to Create a Press Kit for Your Game in 30 Minutes</a></td>
+        <td class="td-center"><span class="badge badge-green">3,389</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">80</span></td>
+      </tr>
+      <tr class="article-row" data-words="2833" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-discounting-strategy" target="_blank" class="article-link" title="Steam Discounting Strategy">Steam Discounting Strategy</a></td>
+        <td class="td-center"><span class="badge badge-green">2,833</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2658" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kit-checklist-next-fest" target="_blank" class="article-link" title="Your Press Kit Checklist for Steam Next Fest">Your Press Kit Checklist for Steam Next Fest</a></td>
+        <td class="td-center"><span class="badge badge-green">2,658</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2550" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/migrate-from-presskit-to-presskit-gg" target="_blank" class="article-link" title="Migrate from presskit() to presskit.gg">Migrate from presskit() to presskit.gg</a></td>
+        <td class="td-center"><span class="badge badge-green">2,550</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2525" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/small-gaming-outlets-coverage" target="_blank" class="article-link" title="Getting Coverage from Smaller Outlets">Getting Coverage from Smaller Outlets</a></td>
+        <td class="td-center"><span class="badge badge-green">2,525</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2386" data-links="4" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/do-journalists-use-press-kits" target="_blank" class="article-link" title="Do Journalists Use Press Kits?">Do Journalists Use Press Kits?</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,386</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">4</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="3652" data-links="3" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/accolades-trailer-guide" target="_blank" class="article-link" title="How to Create an Accolades Trailer After Launch">How to Create an Accolades Trailer After Launch</a></td>
+        <td class="td-center"><span class="badge badge-green">3,652</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2463" data-links="3" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/tiktok-indie-game-marketing" target="_blank" class="article-link" title="TikTok for Indie Game Developers">TikTok for Indie Game Developers</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,463</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="1181" data-links="3" data-score="25">
+        <td class="td-title"><a href="https://presskit.gg/blog/presskit-gg-vs-notion" target="_blank" class="article-link" title="presskit.gg vs Notion for Your Game Press Kit: A Practical Comparison">presskit.gg vs Notion for Your Game Press Kit: A Pra…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,181</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">3</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">25</span></td>
+      </tr>
+      <tr class="article-row" data-words="4398" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-press-kit-guide" target="_blank" class="article-link" title="The Complete Guide to Indie Game Press Kits [2026]">The Complete Guide to Indie Game Press Kits [2026]</a></td>
+        <td class="td-center"><span class="badge badge-green">4,398</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2993" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/dopresskit-alternative" target="_blank" class="article-link" title="presskit() Is Dead — Here Are the Best Modern Alternatives [2026]">presskit() Is Dead — Here Are the Best Modern Altern…</a></td>
+        <td class="td-center"><span class="badge badge-green">2,993</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2960" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/next-fest-scheduling-registration" target="_blank" class="article-link" title="Steam Next Fest Scheduling Guide">Steam Next Fest Scheduling Guide</a></td>
+        <td class="td-center"><span class="badge badge-green">2,960</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2717" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-page-localization" target="_blank" class="article-link" title="Steam Page Localization Guide">Steam Page Localization Guide</a></td>
+        <td class="td-center"><span class="badge badge-green">2,717</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2417" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/studio-press-kit-guide" target="_blank" class="article-link" title="The Studio Press Kit">The Studio Press Kit</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,417</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2291" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-marketing-zero-budget" target="_blank" class="article-link" title="Indie Game Marketing on a Zero Budget">Indie Game Marketing on a Zero Budget</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,291</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2246" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-followers-vs-wishlists" target="_blank" class="article-link" title="Steam Followers vs. Wishlists Explained">Steam Followers vs. Wishlists Explained</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,246</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="2185" data-links="2" data-score="90">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-showcases-festivals" target="_blank" class="article-link" title="How to Get Into Indie Game Showcases and Festivals">How to Get Into Indie Game Showcases and Festivals</a></td>
+        <td class="td-center"><span class="badge badge-yellow">2,185</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-green">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="badge badge-blue">✓</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#22c55e">90</span></td>
+      </tr>
+      <tr class="article-row" data-words="1311" data-links="2" data-score="25">
+        <td class="td-title"><a href="https://presskit.gg/blog/press-kit-launch-timing" target="_blank" class="article-link" title="When to Create Your Press Kit: A Timeline for Indie Game Devs">When to Create Your Press Kit: A Timeline for Indie …</a></td>
+        <td class="td-center"><span class="badge badge-red">1,311</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">25</span></td>
+      </tr>
+      <tr class="article-row" data-words="1304" data-links="2" data-score="25">
+        <td class="td-title"><a href="https://presskit.gg/blog/indie-game-marketing-mistakes" target="_blank" class="article-link" title="5 Marketing Mistakes Indie Devs Make (And How to Fix Them)">5 Marketing Mistakes Indie Devs Make (And How to Fix…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,304</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">25</span></td>
+      </tr>
+      <tr class="article-row" data-words="1254" data-links="2" data-score="35">
+        <td class="td-title"><a href="https://presskit.gg/blog/steam-next-fest-2026-results" target="_blank" class="article-link" title="Steam Next Fest 2026: What Actually Worked (And What Didn't)">Steam Next Fest 2026: What Actually Worked (And What…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,254</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">35</span></td>
+      </tr>
+      <tr class="article-row" data-words="1170" data-links="2" data-score="35">
+        <td class="td-title"><a href="https://presskit.gg/blog/game-launch-week-checklist" target="_blank" class="article-link" title="Your Game Launch Week Checklist: 47 Things to Do Before, During, and After">Your Game Launch Week Checklist: 47 Things to Do Bef…</a></td>
+        <td class="td-center"><span class="badge badge-red">1,170</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-red">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="badge badge-gray">✗</span></td>
+        <td class="td-center"><span class="inbound-count">2</span></td>
+        <td class="td-center"><span class="article-score" style="color:#ef4444">35</span></td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="tableCount">61 artikelen</div>
+  </div>
+
+  <!-- History placeholder -->
+  <div class="card full-width">
+    <div class="card-title">Audit Geschiedenis</div>
+    <p class="history-note">Historische scores worden bijgehouden zodra je meerdere audits hebt gedraaid. Sla dit HTML bestand op als <code>audit-2026-02-21.html</code> om trends te zien.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  SEO Audit Dashboard · Gegenereerd door OpenClaw SEO Audit Tool · 21 februari 2026
+</div>
+
+<script>
+// Table search & filter
+const searchInput = document.getElementById('articleSearch');
+const pillarFilter = document.getElementById('pillarFilter');
+const tldrFilter = document.getElementById('tldrFilter');
+const tbody = document.querySelector('#articlesTable tbody');
+const tableCount = document.getElementById('tableCount');
+const totalRows = 61;
+
+function filterTable() {
+  const q = searchInput.value.toLowerCase();
+  const pf = pillarFilter.value;
+  const tf = tldrFilter.value;
+  let visible = 0;
+  document.querySelectorAll('.article-row').forEach(row => {
+    const title = row.querySelector('.td-title').textContent.toLowerCase();
+    const isPillar = row.querySelector('.badge-blue') !== null;
+    const hasTldr = row.querySelectorAll('td')[2].querySelector('.badge-green') !== null;
+    let show = true;
+    if (q && !title.includes(q)) show = false;
+    if (pf === 'pillar' && !isPillar) show = false;
+    if (pf === 'regular' && isPillar) show = false;
+    if (tf === 'yes' && !hasTldr) show = false;
+    if (tf === 'no' && hasTldr) show = false;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  tableCount.textContent = visible === totalRows ? totalRows + ' artikelen' : visible + ' van ' + totalRows + ' artikelen';
+}
+
+searchInput.addEventListener('input', filterTable);
+pillarFilter.addEventListener('change', filterTable);
+tldrFilter.addEventListener('change', filterTable);
+
+// Table sorting
+let sortCol = 'links';
+let sortDir = -1;
+
+document.querySelectorAll('#articlesTable thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = -1; }
+    document.querySelectorAll('#articlesTable thead th').forEach(h => h.classList.remove('sorted-asc','sorted-desc'));
+    th.classList.add(sortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+    sortTable();
+  });
+});
+
+function sortTable() {
+  const rows = [...document.querySelectorAll('.article-row')];
+  rows.sort((a, b) => {
+    let va, vb;
+    switch(sortCol) {
+      case 'words': va = +a.dataset.words; vb = +b.dataset.words; break;
+      case 'links': va = +a.dataset.links; vb = +b.dataset.links; break;
+      case 'score': va = +a.dataset.score; vb = +b.dataset.score; break;
+      case 'title': va = a.querySelector('.td-title').textContent.trim(); vb = b.querySelector('.td-title').textContent.trim(); return sortDir * va.localeCompare(vb, 'nl');
+      case 'tldr': va = a.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[2].querySelector('.badge-green') ? 1 : 0; break;
+      case 'faq': va = a.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; vb = b.querySelectorAll('td')[3].querySelector('.badge-green') ? 1 : 0; break;
+      case 'pillar': va = a.querySelector('.badge-blue') ? 1 : 0; vb = b.querySelector('.badge-blue') ? 1 : 0; break;
+      case 'takeaways': va = a.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; vb = b.querySelectorAll('td')[5].querySelector('.badge-blue') ? 1 : 0; break;
+      default: return 0;
+    }
+    return sortDir * (va - vb);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+</body>
+</html>
