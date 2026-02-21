@@ -73,6 +73,13 @@
       "latestScore": 20,
       "dashboards": [
         {
+          "file": "dashboard-2026-02-21-elphinstone.html",
+          "date": "2026-02-21",
+          "label": "21 februari 2026",
+          "score": 20,
+          "grade": "Major Gaps"
+        },
+        {
           "file": "dashboard-2026-02-19-elphinstone.html",
           "date": "2026-02-19",
           "label": "19 februari 2026",
